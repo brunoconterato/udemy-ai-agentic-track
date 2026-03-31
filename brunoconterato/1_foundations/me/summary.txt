@@ -1,0 +1,6 @@
+Deep Learning and Applied AI Engineer with experience in model development, adaptation of existing models, fine-tuning, and building
+data-driven intelligent applications.
+Primarily focused on deep learning, NLP, LLMs, RAG, and conversational agents, bridging modeling, backend engineering, and product
+development to transform research and prototypes into production-ready solutions.
+Strong interest in foundation model-based systems, AI application evaluation and monitoring, production inference, and agent-oriented
+architectures.
