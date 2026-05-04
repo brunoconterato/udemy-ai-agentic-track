@@ -101,3 +101,15 @@ O fluxo é:
 4. Execute o agente com `Runner.run(agent, prompt)` como no exemplo acima.
 
 Se o Ollama estiver rodando em outra porta ou host, ajuste `base_url` para o endpoint correto do servidor Ollama.
+
+## Vibe Coding
+
+A imagem destaca uma abordagem prática e ágil para trabalhar com LLMs, chamada `vibe coding`.
+
+- **Prompt curto e direto**: mantenha prompts curtos e peça respostas diretas, preferindo APIs e datas atualizadas.
+- **Confirme com outro modelo**: consulte dois LLMs para a mesma pergunta e compare respostas.
+- **Quebre em etapas**: divida o pedido em etapas menores e independentes para testar cada parte.
+- **Revise com uma segunda checagem**: peça uma resposta e depois use outro modelo para checar ou revisar.
+- **Compare múltiplas alternativas**: solicite três soluções para o mesmo problema e escolha a melhor.
+
+Essa mentalidade ajuda a trabalhar com IA de forma mais segura e eficaz, mantendo rapidez, comparação e validação em cada interação.
