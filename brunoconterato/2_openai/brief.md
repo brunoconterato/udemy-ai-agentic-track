@@ -1,76 +1,83 @@
 # OpenAI Agents SDK
 
-## Terminologia Minimalista do OpenAI Agents SDK
+## Terminologia minimalista para agentes de IA
 
-O OpenAI Agents SDK utiliza uma terminologia simples e direta para explicar como os agentes funcionam. Essa abordagem reduz a complexidade e facilita a compreensão dos conceitos centrais.
+O OpenAI Agents SDK foca em uma visão simples e prática para criar fluxos com agentes.
 
----
+### 1. Agents
 
-### 1. Agents (Agentes)
+- Agentes são instâncias de LLMs com instruções e contexto.
+- Eles executam tarefas, respondem a prompts e tomam decisões.
+- Pense neles como a “mente” do sistema.
 
-- **O que são**: agentes representam modelos de linguagem (LLMs).
-- **Papel**: são a “mente” que processa texto, gera respostas e toma decisões com base em prompts e contexto.
-- **Por que importa**: quando falamos de um agente, estamos nos referindo a uma instância de IA que executa tarefas conversacionais ou de raciocínio.
+### 2. Guardrails
 
----
+- Guardrails são regras e limites que controlam o comportamento do agente.
+- Eles evitam respostas indesejadas ou fora do escopo.
+- Funcionam como segurança e alinhamento.
 
-### 2. Handoffs (Transferências)
+### 3. Tools
 
-- **O que são**: handoffs representam interações.
-- **Papel**: descrevem como a conversa ou o trabalho é passado entre agentes, entre o usuário e o agente, ou entre diferentes componentes de um fluxo.
-- **Por que importa**: em sistemas com múltiplos agentes, o handoff define a transição de controle e de informação de uma parte para outra.
+- Tools são capacidades auxiliares que o agente pode chamar.
+- Elas funcionam como funções ou serviços externos.
+- O agente chama a tool, recebe o resultado e continua sua execução.
 
----
+### 4. Handoffs
 
-### 3. Guardrails (Trilhos de proteção)
-
-- **O que são**: guardrails representam controles.
-- **Papel**: servem para limitar comportamentos, impor regras de segurança e garantir que o agente opere dentro de parâmetros aceitáveis.
-- **Por que importa**: garantem respostas mais seguras, apropriadas e alinhadas com as intenções desejadas.
-
----
-
-## Resumo
-
-A terminologia minimalista do SDK foca em três conceitos essenciais:
-
-- **Agents = LLMs**
-- **Handoffs = Interações**
-- **Guardrails = Controles**
-
-Essa simplicidade ajuda a entender rapidamente como estruturar agentes no OpenAI Agents SDK, especialmente ao começar a trabalhar com orquestração de IA e fluxos de conversação.
+- Handoffs são delegações de controle entre agentes.
+- Um agente passa a tarefa para outro agente especializado.
+- O segundo agente assume a execução e pode continuar o fluxo.
 
 ---
 
-## Três passos para usar um agente
+## Diferença direta: tools vs handoffs
 
-O fluxo básico no SDK segue três passos simples, conforme a imagem:
+- `tools` ampliam um agente com ações auxiliares e retornam ao agente original.
+- `handoffs` transferem o trabalho para outro agente, deslocando o controle.
 
-1. Criar uma instância de `Agent`
-2. Usar `with trace()` para acompanhar o agente
-3. Chamar `runner.run()` para executar o agente
+Ou seja:
 
-### Exemplo simplificado
+- com ferramentas, o agente mantém o controle e usa capacidades externas;
+- com handoffs, o agente entrega a tarefa e deixa outro agente conduzir.
+
+Essa distinção é central para construir pipelines de agentes eficientes.
+
+---
+
+## Antes de começar
+
+Importe os elementos principais e carregue variáveis de ambiente:
 
 ```python
-from openai_agents import Agent, runner
+from dotenv import load_dotenv
+from agents import Agent, Runner, trace, function_tool
+import asyncio
 
-agent = Agent(model="gpt-4.1")
-
-with trace(agent) as trace_data:
-    result = runner.run(agent, "Explique a terminologia minimalista do SDK.")
-
-print(result)
-print(trace_data)
+load_dotenv(override=True)
 ```
 
-Nesse exemplo:
+Use `trace()` para acompanhar a execução, entender dependências e depurar o fluxo.
 
-- `Agent(...)` cria o agente que usa o modelo de linguagem.
-- `with trace(agent)` habilita o rastreamento da execução do agente.
-- `runner.run(agent, prompt)` dispara a execução do agente com o prompt dado.
+---
 
-Essa sequência demonstra de forma didática como inicializar, monitorar e rodar um agente no OpenAI Agents SDK.
+## Fluxo básico de um agente
+
+1. Criar o agente com `Agent(...)`.
+2. Executar com `Runner.run(...)`.
+3. Inspecionar com `trace(...)`.
+
+```python
+agent = Agent(
+    name="ResumoAgent",
+    instructions="Resuma o texto de forma clara",
+    model="gpt-4o-mini"
+)
+
+with trace("Resumo"):
+    result = Runner.run(agent, "Explique o papel dos agentes de IA")
+
+print(result.final_output)
+```
 
 ---
 
@@ -113,3 +120,95 @@ A imagem destaca uma abordagem prática e ágil para trabalhar com LLMs, chamada
 - **Compare múltiplas alternativas**: solicite três soluções para o mesmo problema e escolha a melhor.
 
 Essa mentalidade ajuda a trabalhar com IA de forma mais segura e eficaz, mantendo rapidez, comparação e validação em cada interação.
+
+---
+
+## Criação de agentes colaborativos
+
+É comum criar vários agentes com diferentes estilos ou funções:
+
+```python
+agent1 = Agent(name="Formal", instructions="Escreva formalmente", model="gpt-4o-mini")
+agent2 = Agent(name="Criativo", instructions="Escreva de forma criativa", model="gpt-4o-mini")
+
+results = await asyncio.gather(
+    Runner.run(agent1, "Gere um parágrafo"),
+    Runner.run(agent2, "Gere um parágrafo")
+)
+
+outputs = [r.final_output for r in results]
+```
+
+Um agente avaliador pode comparar as saídas e escolher a melhor opção.
+
+---
+
+## Ferramentas em agentes
+
+Declare ferramentas genéricas com `@function_tool`:
+
+```python
+@function_tool
+def format_text(text: str) -> dict:
+    return {"formatted": text.strip()}
+```
+
+Também é possível converter um agente em tool:
+
+```python
+writer_agent = Agent(name="Writer", instructions="Gere texto curto", model="gpt-4o-mini")
+writer_tool = writer_agent.as_tool(
+    tool_name="writer_tool",
+    tool_description="Gera texto curto"
+)
+```
+
+Use as tools dentro de outro agente:
+
+```python
+planner = Agent(
+    name="Planner",
+    instructions="Use as ferramentas para criar a melhor resposta",
+    tools=[writer_tool, format_text],
+    model="gpt-4o-mini"
+)
+```
+
+---
+
+## Handoffs entre agentes
+
+Handoffs são úteis quando você quer delegar o trabalho a outro agente especializado.
+
+```python
+formatter = Agent(name="Formatter", instructions="Formate o texto em HTML", model="gpt-4o-mini")
+manager = Agent(
+    name="Manager",
+    instructions="Escolha a melhor resposta e passe para o Formatter",
+    tools=[writer_tool],
+    handoffs=[formatter],
+    model="gpt-4o-mini"
+)
+```
+
+Nesse caso, o `manager` gera o conteúdo e entrega para o `formatter`, que assume a continuação.
+
+---
+
+## Boas práticas rápidas
+
+- Use instruções claras e específicas.
+- Divida o fluxo em agentes com responsabilidades distintas.
+- Compare saídas de agentes diferentes.
+- Use `trace()` para entender cada etapa.
+- Seja explícito ao definir tools e handoffs.
+
+---
+
+## Resumo rápido
+
+- **Agents**: instâncias de LLMs com instruções.
+- **Tools**: ações auxiliares que retornam resultados ao agente original.
+- **Handoffs**: delegação de tarefa para outro agente.
+- **Guardrails**: regras que limitam comportamento.
+- **Trace**: rastreamento e depuração do fluxo.
