@@ -89,7 +89,7 @@ O código de configuração é similar a este:
 ```python
 from agents import OpenAIChatCompletionsModel, AsyncOpenAI, ModelSettings
 
-external_client = AsyncOpenAI(base_url="http://localhost:11434/v1")
+external_client = AsyncOpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 model = OpenAIChatCompletionsModel(model="qwen2.5", openai_client=external_client)
 
 agent = Agent(
@@ -103,7 +103,7 @@ agent = Agent(
 O fluxo é:
 
 1. Inicie o Ollama localmente e exponha o endpoint HTTP no `localhost:11434`.
-2. Use `AsyncOpenAI(base_url="http://localhost:11434/v1")` para apontar o cliente para o Ollama.
+2. Use `AsyncOpenAI(base_url="http://localhost:11434/v1", api_key="ollama")` para apontar o cliente para o Ollama.
 3. Defina o modelo com `OpenAIChatCompletionsModel(model="qwen2.5", openai_client=external_client)` para corresponder ao modelo carregado no Ollama.
 4. Execute o agente com `Runner.run(agent, prompt)` como no exemplo acima.
 
