@@ -251,28 +251,33 @@ print(resultado)
 
 ### 4. Tools (Ferramentas)
 
-`Tools` são capacidades externas que um `Agent` pode usar para ir além da geração de texto.
+`Tools` são recursos extras que um `Agent` pode usar para fazer algo além de gerar texto.
 
-- **A ideia da aula:** o CrewAI já vem com “baterias incluídas”, ou seja, várias ferramentas prontas para plugar no agente.
-- **Exemplos nativos/usuais:** busca na web, scraping de páginas, leitura de arquivos, acesso a documentos locais e consulta a APIs.
-- **Quando usar:** quando o agente precisa de informação atualizada, dados estruturados ou alguma ação fora do LLM.
-- **Ideia prática:** a `Tool` amplia o que o agente consegue fazer; ela não substitui a `Task`, mas ajuda a executá-la melhor.
+- **Ideia central:** o agente continua pensando e decidindo, mas agora pode consultar fontes, ler arquivos ou interagir com dados reais.
+- **Quando usar:** quando o trabalho pede informação atualizada, leitura de conteúdo externo ou alguma ação fora do LLM.
+- **Regra prática:** a `Tool` ajuda a executar a tarefa; ela não substitui a `Task`.
 
-Exemplo típico de `Agent` com ferramentas:
+Exemplos de tools prontas do ecossistema CrewAI:
+
+- `SerperDevTool`: busca na web.
+- `ScrapeWebsiteTool`: lê o conteúdo de uma página.
+- `FileReadTool`: lê arquivos locais.
+- `DirectoryReadTool`: lê diretórios e lista arquivos.
+- `CSVSearchTool`: consulta dados em arquivos CSV.
+- `WebsiteSearchTool`: pesquisa conteúdo em sites.
+
+Exemplo incremental, mudando só o `Agent`:
 
 ```python
-from crewai import Agent
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 pesquisador = Agent(
-    role="Pesquisador de Conteúdo",
-    goal="Encontrar fontes confiáveis sobre {topico}",
-    backstory="Você cruza fontes e coleta os pontos mais relevantes.",
+    ...
     tools=[SerperDevTool(), ScrapeWebsiteTool()],
 )
 ```
 
-Nesse exemplo, o agente não fica só “inventando” resposta: ele pode pesquisar e abrir páginas para montar uma base melhor antes de escrever.
+Aqui a ideia é simples: o agente pesquisa e abre páginas antes de responder. Se a `Task` não precisar de fonte externa, você pode deixar `tools=[]` ou nem declarar ferramentas.
 
 ### 5. Context (Contexto)
 

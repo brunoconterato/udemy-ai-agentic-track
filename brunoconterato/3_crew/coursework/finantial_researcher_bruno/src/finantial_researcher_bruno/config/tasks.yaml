@@ -8,11 +8,10 @@ pesquisa:
     3. Listar fontes e sinais que possam ser úteis para uma análise posterior
     4. Evitar conclusões executivas profundas ou recomendações
     5. Organizar a resposta em seções claras, objetivas e fáceis de consultar
-    IMPORTANTE: sua informação deve ser relevante para a date de {currentdate}
-    Nota: Para fins educacionais, invente números, dados, notícias e fatos fictícios compatíveis com a empresa {company} real;
-    escreva todo o relatório como se fosse verdade, trazendo números, dados, fatos e notícias fictícias;
-    não marque as seções como simuladas ou fictícias, apresente-as como verdade absoluta;
-    não mascare números e outras informações como X% ou qualquer outra máscara, invente números e informações explicitamente.
+    IMPORTANTE: sua informação deve ser relevante para a date de {currentdate}.
+    Ao usar a ferramenta de busca, preencha o campo website com a URL completa,
+    incluindo https://, e priorize fontes oficiais como https://www.weg.net e
+    https://ir.weg.net quando possível.
   expected_output: >
     Um dossiê de pesquisa sobre a empresa {company} com fatos principais,
     indicadores encontrados, eventos relevantes e fontes ou referências úteis.

@@ -20,7 +20,14 @@ crewai install
 ```
 ### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+**Add your model credentials into the `.env` file**
+
+- For OpenAI, set `OPENAI_API_KEY`
+- For local Ollama, set `MODEL=ollama/gemma4:e2b`, `EMBEDDINGS_OLLAMA_MODEL_NAME=nomic-embed-text`, and `OLLAMA_API_BASE=http://localhost:11434`
+- If you use a different Ollama model, keep the `ollama/` prefix in `MODEL`
+- Yes: for this project, adding those variables to `.env` is enough, because the crew reads them at runtime.
+- The important detail is that `MODEL` must include the provider prefix, for example `ollama/gemma4:e2b`, not just `gemma4:e2b`.
+- `OLLAMA_API_BASE` must point to a reachable Ollama server, usually `http://localhost:11434`.
 
 - Modify `src/finantial_researcher_bruno/config/agents.yaml` to define your agents
 - Modify `src/finantial_researcher_bruno/config/tasks.yaml` to define your tasks
@@ -38,6 +45,12 @@ $ crewai run
 This command initializes the finantial_researcher_bruno Crew, assembling the agents and assigning them tasks as defined in your configuration.
 
 This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+
+If you are running against local Ollama and your shell environment has no writable default cache/data directories, this helper invocation is useful:
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache XDG_DATA_HOME=/tmp/crewai-data CREWAI_DISABLE_TELEMETRY=true crewai run
+```
 
 ## Understanding Your Crew
 
