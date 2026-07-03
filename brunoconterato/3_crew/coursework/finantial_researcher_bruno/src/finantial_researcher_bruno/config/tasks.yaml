@@ -18,6 +18,7 @@ pesquisa:
     indicadores encontrados, eventos relevantes e fontes ou referências úteis.
     O texto deve ser descritivo e voltado à coleta de informação.
   agent: pesquisador_financeiro
+  output_file: output/research_{currentdate}.md
 
 analise:
   description: >
@@ -34,3 +35,6 @@ analise:
     executivo, interpretação dos dados, principais conclusões, riscos,
     oportunidades e uma visão final da situação da empresa.
   agent: analista_financeiro
+  context:
+    - pesquisa
+  output_file: output/report_{currentdate}.md
