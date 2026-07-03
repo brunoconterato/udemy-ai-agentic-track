@@ -76,13 +76,17 @@ Agentes e Tarefas podem ser definidos de duas maneiras principais:
 
 Uma unidade autônoma que atua como um "membro da equipe".
 
-- **Atributos:** Possui um LLM próprio, função (role), meta (goal), backstory (contexto de fundo), memória e ferramentas (tools).
+- **Atributos:** Possui um LLM próprio, função (role), meta (goal), contexto de fundo (backstory), memória e ferramentas (tools).
+
+Nota: podemos pensar em um `Agent` como o `system prompt` dado ao LLM.
 
 ### 2. Task (Tarefa)
 
 Uma atribuição específica a ser executada.
 
 - **Atributos:** Descrição clara, expectativa de saída (output) e um agente responsável.
+
+Nota: podemos pensar em uma `Task` como o `user prompt` dado ao `Agent`.
 
 ### 3. Crew (Equipe)
 
@@ -97,21 +101,53 @@ O conjunto de **Agentes** e **Tarefas** trabalhando em conjunto. Pode operar de 
 
 Para projetos maiores, é comum utilizar arquivos `.yaml` para configurar os agentes. Isso facilita o ajuste de _prompts_ sem mexer no código Python.
 
-**Exemplo de `agents.yaml`:**
+Nota: em YAML, o `>` junta várias linhas em um único texto, trocando as quebras de linha por espaços.
+Exemplo: `linha 1` + `linha 2` vira `linha 1 linha 2`.
+
+**Arquivo: `src/meu_projeto/config/agents.yaml`**
 
 ```yaml
-researcher:
+pesquisador_conteudo:
   role: >
-    Senior Financial Researcher
+    Pesquisador de Conteúdo
   goal: >
-    Research companies, news and potential
+    Levantar informações confiáveis sobre o tema antes da escrita
   backstory: >
-    You're a seasoned financial researcher with a
-    talent for finding the most relevant information.
-  llm: openai/gpt-4o-mini
+    Você é um analista cuidadoso, ótimo em encontrar fontes relevantes
+    e identificar os pontos mais importantes de um assunto.
+
+editor_seo:
+  role: >
+    Editor SEO
+  goal: >
+    Transformar a pesquisa em um texto claro, útil e otimizado para leitura online
+  backstory: >
+    Você escreve conteúdo objetivo, bem estruturado e pensado para quem quer
+    aprender rápido sem perder profundidade.
 ```
 
-**Como acessar no Python:**
+**Arquivo: `src/meu_projeto/config/tasks.yaml`**
+
+```yaml
+mapear_tendencias:
+  description: >
+    Pesquise as principais tendências sobre {topico} e organize os achados em tópicos.
+  expected_output: >
+    Um resumo com 3 a 5 pontos principais, incluindo contexto e exemplos.
+  agent: pesquisador_conteudo
+
+escrever_artigo:
+  description: >
+    Escreva um artigo curto para blog usando a pesquisa como base, com título,
+    introdução, subtítulos e conclusão.
+  expected_output: >
+    Um artigo pronto para publicação, com tom didático e leitura fluida.
+  agent: editor_seo
+```
+
+**Arquivo: `src/meu_projeto/crew.py`**
+
+**No arquivo `src/meu_projeto/crew.py`, o acesso fica assim:**
 O CrewAI utiliza decoradores específicos para mapear as configurações do YAML para objetos Python de forma organizada.
 
 - **`@agent`**: Define um método que retorna um Agente usando as configurações do YAML.
@@ -124,27 +160,39 @@ from crewai.project import CrewBase, agent, task, crew
 
 @CrewBase
 class SuaEquipe():
-    # Caminhos para os arquivos de configuração
+    # Arquivos de configuração usados por esta classe
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
     @agent
-    def pesquisador_financeiro(self) -> Agent:
+    def pesquisador_conteudo(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'] # Chave do YAML
+            config=self.agents_config['pesquisador_conteudo'] # Chave do YAML
+        )
+
+    @agent
+    def editor_seo(self) -> Agent:
+        return Agent(
+            config=self.agents_config['editor_seo'] # Chave do YAML
         )
 
     @task
-    def tarefa_de_pesquisa(self) -> Task:
+    def mapear_tendencias(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'] # Chave do YAML das tarefas
+            config=self.tasks_config['mapear_tendencias'] # Chave do YAML das tarefas
+        )
+
+    @task
+    def escrever_artigo(self) -> Task:
+        return Task(
+            config=self.tasks_config['escrever_artigo'] # Chave do YAML das tarefas
         )
 
     @crew
     def equipe(self) -> Crew:
         return Crew(
-            agents=self.agents, # Coleta todos os métodos decorados com @agent
-            tasks=self.tasks,   # Coleta todos os métodos decorados com @task
+            agents=self.agents, # Vem de config/agents.yaml
+            tasks=self.tasks,   # Vem de config/tasks.yaml
             process=Process.sequential
         )
 ```
@@ -154,6 +202,8 @@ class SuaEquipe():
 ## 💻 Exemplo Prático de Código (Via Código Direto)
 
 Abaixo, um exemplo simplificado de como estruturar uma equipe básica no CrewAI:
+
+**Arquivo: `src/meu_projeto/crew.py`**
 
 ```python
 from crewai import Agent, Task, Crew, Process
