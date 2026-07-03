@@ -18,7 +18,10 @@ def run():
     """
     Run the crew.
     """
-    inputs = {"company": "WEG"}
+    inputs = {
+        "company": "WEG",
+        "currentdate": "03 de Julho de 2026"
+    }
 
     try:
         FinantialResearcherBruno().crew().kickoff(inputs=inputs)
