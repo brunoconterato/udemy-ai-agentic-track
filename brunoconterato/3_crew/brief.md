@@ -41,7 +41,7 @@ if __name__ == "__main__":
   crew.kickoff(inputs={'topico': 'IA Agentica'})
 ```
 
-1. Executar
+5. Executar
 
 - Execute o projeto com: `crewai run`
 - Alternativamente teste localmente com: `python -m src.meu_projeto.main`
@@ -102,7 +102,7 @@ O conjunto de **Agentes** e **Tarefas** trabalhando em conjunto. Pode operar de 
 Para projetos maiores, é comum utilizar arquivos `.yaml` para configurar os agentes. Isso facilita o ajuste de _prompts_ sem mexer no código Python.
 
 Nota: em YAML, o `>` junta várias linhas em um único texto, trocando as quebras de linha por espaços.
-Exemplo: `linha 1` + `linha 2` vira `linha 1 linha 2`.
+Exemplo: `linha 1` > `linha 2` vira `linha 1 linha 2`.
 
 **Arquivo: `src/meu_projeto/config/agents.yaml`**
 
@@ -248,6 +248,58 @@ equipe = Crew(
 resultado = equipe.kickoff(inputs={'topico': 'IA Agentica'})
 print(resultado)
 ```
+
+### 4. Tools (Ferramentas)
+
+`Tools` são capacidades externas que um `Agent` pode usar para ir além da geração de texto.
+
+- **A ideia da aula:** o CrewAI já vem com “baterias incluídas”, ou seja, várias ferramentas prontas para plugar no agente.
+- **Exemplos nativos/usuais:** busca na web, scraping de páginas, leitura de arquivos, acesso a documentos locais e consulta a APIs.
+- **Quando usar:** quando o agente precisa de informação atualizada, dados estruturados ou alguma ação fora do LLM.
+- **Ideia prática:** a `Tool` amplia o que o agente consegue fazer; ela não substitui a `Task`, mas ajuda a executá-la melhor.
+
+Exemplo típico de `Agent` com ferramentas:
+
+```python
+from crewai import Agent
+from crewai_tools import SerperDevTool, ScrapeWebsiteTool
+
+pesquisador = Agent(
+    role="Pesquisador de Conteúdo",
+    goal="Encontrar fontes confiáveis sobre {topico}",
+    backstory="Você cruza fontes e coleta os pontos mais relevantes.",
+    tools=[SerperDevTool(), ScrapeWebsiteTool()],
+)
+```
+
+Nesse exemplo, o agente não fica só “inventando” resposta: ele pode pesquisar e abrir páginas para montar uma base melhor antes de escrever.
+
+### 5. Context (Contexto)
+
+`Context` é a informação que uma tarefa ou agente recebe para trabalhar com continuidade.
+
+- **Pode vir de:** saídas de tarefas anteriores, inputs passados na execução, memória do agente ou instruções explícitas.
+- **Em uma crew sequencial:** o resultado de uma tarefa pode virar o contexto da próxima. É exatamente a ideia da aula: uma etapa depende da anterior e herda o que já foi produzido.
+- **Ideia prática:** use `Context` quando uma tarefa depende do que já foi produzido antes, em vez de começar do zero.
+
+Exemplo típico de `Task` com contexto de outra tarefa:
+
+```python
+from crewai import Task
+
+mapear_tendencias = Task(
+    description="Pesquise as principais tendências sobre IA aplicada a negócios.",
+    expected_output="Um resumo com os 3 principais pontos encontrados.",
+)
+
+escrever_artigo = Task(
+    description="Escreva um artigo curto com base na pesquisa anterior.",
+    expected_output="Um artigo pronto para publicação.",
+    context=[mapear_tendencias],
+)
+```
+
+Aqui, `escrever_artigo` recebe como contexto o que foi produzido em `mapear_tendencias`, então ela não precisa repetir a pesquisa do zero.
 
 ---
 
