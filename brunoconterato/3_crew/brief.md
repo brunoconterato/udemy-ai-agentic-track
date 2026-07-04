@@ -6,15 +6,33 @@ O CrewAI é um framework para orquestrar agentes de IA autônomos que trabalham 
 
 Projetos CrewAI são, por padrão, projetos **UV** (um gerenciador de pacotes Python ultra-rápido).
 
-- **Instalação do CLI:** `uv tool install --with crewai-tools crewai@0.121.1`
+- **Instalação do CLI:** `uv tool install --with crewai-tools crewai@latest`
+- **Atualizar o CLI:** `uv tool upgrade crewai`
+- **Ativar ambiente venv:** `source .venv/bin/activate`
 - **Criar novo projeto:** `crewai create crew meu_projeto`
 - **Executar o projeto:** `crewai run`
 
-Nota: O comando oficial `uv tool install crewai` não funcionou. Utilizei `uv tool install --with crewai-tools crewai@0.121.1` conforme [instruções](https://community.crewai.com/t/unable-to-install-crewai-no-executables-are-provided-by-crewai/6028/2)
+### CLI útil para esta sessão
+
+Resumo curto dos comandos que mais ajudam nesta parte do curso:
+
+- `crewai create crew <nome>`: cria a estrutura inicial de uma crew nova.
+- `crewai install`: instala as dependências do projeto criado.
+- `crewai run`: executa a crew com a configuração atual.
+- `source .venv/bin/activate && crewai run`: ativa o venv local e roda a crew nele.
+- `uv tool upgrade crewai`: atualiza a CLI instalada via `uv` para a versão mais recente disponível no índice.
+- `crewai traces status`: mostra se a coleta de traces está ativa.
+- `crewai traces enable` / `crewai traces disable`: liga ou desliga a coleta de traces nas execuções.
+- `crewai test -n <iteracoes> [-m <modelo>]`: testa a crew algumas vezes e ajuda a comparar resultados.
+- `crewai log-tasks-outputs`: mostra a saída mais recente das tasks executadas.
+- `crewai replay -t <task_id>`: repete a execução a partir de uma task específica.
+
+Nota: O comando oficial `uv tool install crewai` não funcionou. Utilizei `uv tool install --with crewai-tools crewai@latest` conforme [instruções](https://community.crewai.com/t/unable-to-install-crewai-no-executables-are-provided-by-crewai/6028/2)
 
 ### Cinco Passos Rápidos para Criar um Projeto
 
-Siga estes cinco passos na ordem para criar, configurar e executar um projeto CrewAI de forma prática.
+Siga estes cinco passos na 
+ordem para criar, configurar e executar um projeto CrewAI de forma prática.
 
 1. Criar o projeto
    - Execute: `crewai create crew meu_projeto`
