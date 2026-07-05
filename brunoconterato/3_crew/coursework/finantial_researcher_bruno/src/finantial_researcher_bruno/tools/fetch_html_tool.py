@@ -1,11 +1,11 @@
-from crewai.tools import BaseTool
 from typing import Type
+
+from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from urllib.parse import urlparse
 from trafilatura import fetch_url, extract
 
 
-@staticmethod
 def _normalize_website_url(website: str) -> str:
     parsed = urlparse(website)
     if parsed.scheme:
@@ -13,7 +13,6 @@ def _normalize_website_url(website: str) -> str:
     return f"https://{website.lstrip('/')}"
 
 
-@staticmethod
 def _website_candidates(website: str) -> list[str]:
     normalized = _normalize_website_url(website)
     parsed = urlparse(normalized)
@@ -36,24 +35,24 @@ def _website_candidates(website: str) -> list[str]:
 class FetchHTMLInput(BaseModel):
     """Input schema for MyCustomTool."""
 
-    url: str = Field(..., description="Query for a search")
+    url: str = Field(..., description="Url for fetching data")
 
 
 class FetchHTMLTool(BaseTool):
     name: str = "Fetch HTML tool"
-    description: str = "Tool used for extract html content from a given url"
+    description: str = "Tool used for extract html content from a given url for fetching data porposes"
     args_schema: Type[BaseModel] = FetchHTMLInput
 
     def _run(self, url: str) -> str | None:
-        print("Url: ", url)
         url_candidates = _website_candidates(url)
-        print("url_candidates: ", url_candidates)
         for candidate in url_candidates:
             try:
-                downloaded = fetch_url(url)
+                downloaded = fetch_url(candidate)
                 if downloaded:
                     result = extract(downloaded)
-                    print("result: ", result)
-                    return result
-            except Exception as e:
-                print(e)
+                    if result:
+                        return result[:6000]
+            except Exception:
+                continue
+
+        return None

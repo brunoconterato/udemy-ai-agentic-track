@@ -13,6 +13,12 @@ pesquisa:
     Se o site não estiver indisponivel, registre a limitacao e continue
     a pesquisa com outras fontes publicas.
     Use apenas Fontes confiáveis.
+    Use essa ferramenta assim: primeiro faça uma busca;
+    depois, para cada página que parecer relevante, chame `fetch_html_tool`;
+    extraia fatos, números e trechos úteis dessa página antes de seguir para a próxima;
+    registre na resposta quais páginas foram lidas com a too;
+    faça mais buscas se necessário.
+    Limites máximos: 2 searches + 5 fetchs de html.
   expected_output: >
     Um dossiê de pesquisa sobre a empresa {company} com fatos principais,
     indicadores encontrados, eventos relevantes e fontes ou referências úteis.
