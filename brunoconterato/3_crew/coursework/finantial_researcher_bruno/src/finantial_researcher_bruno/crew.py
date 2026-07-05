@@ -82,4 +82,5 @@ class FinantialResearcherBruno:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
+            tracing=True,
         )

@@ -1,61 +1,51 @@
-# Dossiê Factual da Empresa WEG (WEGE3)
+# Dossiê Factual da Empresa WEG
 
-Este dossiê foi elaborado com o objetivo de registrar fatos, indicadores financeiros, notícias e perspectivas estratégicas da empresa WEG, baseando-se em fontes públicas disponíveis até a data de 03 de Julho de 2026. A informação é apresentada de forma objetiva para servir como base para análise posterior.
+**Data de Referência da Pesquisa:** 03 de Julho de 2026
 
----
-
-## 1. Fatos Principais e Indicadores Financeiros (Dados Recentes)
-
-Os dados a seguir refletem o desempenho operacional e financeiro da WEG em períodos recentes, conforme extraído das fontes pesquisadas.
-
-### 1.1. Desempenho Operacional e Rentabilidade
-*   **Receita Anualizada:** Acima de R$ 40 bilhões (últimos 12 meses).
-*   **Lucro Líquido Anualizado:** Acima de R$ 6 bilhões.
-*   **EBITDA (Lucro Antes de Juros, Impostos, Depreciação e Amortização):** Acima de R$ 2,2 bilhões (no último trimestre divulgado).
-*   **Margem EBITDA:** Cerca de 22%.
-*   **ROIC (Retorno sobre o Capital Investido):** Superior a 30%.
-*   **ROE (Retorno sobre o Patrimônio Líquido):** Próximo de 29%.
-
-### 1.2. Indicadores de Mercado e Valuation
-| Indicador | Valor Atual Aproximado | Observações |
-| :--- | :--- | :--- |
-| P/L (Preço/Lucro) | Entre 30x e 35x | Múltiplos elevados. |
-| P/VP (Preço/Valor Patrimonial) | Acima de 9x | |
-| Dividend Yield (DY) | Entre 1% e 2% | |
-
-### 1.3. Estrutura de Capital e Geração de Caixa
-*   **Dívida Líquida:** Negativa (a empresa possui mais caixa do que dívida).
-*   **Fluxo de Caixa:** A empresa mantém geração de caixa recorrente e posição de caixa líquido, tendo financiado expansão com recursos próprios.
+Este dossiê foi elaborado com o objetivo de registrar fatos, indicadores, eventos e fontes publicadas sobre a WEG, priorizando dados objetivos para análise posterior.
 
 ---
 
-## 2. Notícias e Resultados Relevantes
+## 1. Indicadores Financeiros e Resultados Relevantes
 
-### 2.1. Resultados Trimestrais (Referência: 1º Trimestre de 2026)
-*   **Lucro Líquido:** R$ 1,46 bilhão no primeiro trimestre de 2026.
-*   **Ebitda:** R$ 2,10 bilhões no primeiro trimestre de 2026 (com contração de 3,2% na comparação anual).
+Os dados abaixo são baseados nas informações encontradas em fontes públicas até a data de referência, focando nos resultados recentes divulgados pela empresa.
 
-### 2.2. Contexto e Cenário Atual
-*   **Posicionamento:** A WEG é referenciada como uma das empresas mais eficientes da Bolsa brasileira, demonstrando crescimento com eficiência e disciplina financeira.
-*   **Crescimento Histórico:** A receita da companhia cresceu de aproximadamente R$ 5 bilhões em 2011 para superar R$ 40 bilhões nos últimos 12 meses.
-*   **Pressão na Cotação:** A recente desvalorização pode estar relacionada a ajustes de múltiplo, realização de lucros e fluxo estrangeiro, sem deterioração estrutural nos fundamentos da empresa.
+### 1.1. Resultado do Primeiro Trimestre de 2026 (1T26)
+*   **Lucro Líquido:** A WEG (WEGE3) reportou um lucro líquido de **R$ 1,45 bilhão** referente ao primeiro trimestre de 2026 (1T26).
+*   **Variação Interanual:** Este resultado representa um recuo de **5,7%** em comparação com o mesmo período de 2025.
+*   **Contexto de Receita:** A valorização do real frente ao dólar ao longo do período teve impacto direto sobre os resultados do WEG (WEGE3), reduzindo a receita convertida das operações internacionais.
 
----
-
-## 3. Perspectivas Estratégicas e Avenidas de Crescimento
-
-A gestão da WEG foca em expansão e eficiência operacional através das seguintes áreas estratégicas:
-
-*   **Expansão em Transformadores:** Aumento da capacidade produtiva com previsão de dobrar a produção nos próximos anos.
-*   **Automação Industrial:** Aproveitamento do mercado global em expansão por meio da demanda crescente por eficiência e digitalização.
-*   **Eficiência Energética:** Substituição de motores antigos por modelos mais eficientes, impulsionando o crescimento.
-*   **Internacionalização:** Busca por presença global para reduzir risco concentrado no Brasil e ampliar oportunidades em mercados desenvolvidos.
+### 1.2. Investimentos e Ativos
+*   **Investimentos em Ativos Imobilizados (Anunciado):** A empresa anunciou investimentos de cerca de **R$ 3,54 bilhões** em ativos imobilizados para o ano de 2026.
+*   **Ativos Intangíveis:** Foi divulgado um valor de **R$ 22,4 milhões** em ativos intangíveis adicionais.
+*   **Comparação com 2025:** Os valores mencionados para investimentos e ativos intangíveis são indicados como "acima dos praticados em 2025".
 
 ---
 
-## 4. Fontes e Referências Utilizadas
+## 2. Notícias e Eventos Recentes
 
-As informações acima foram compiladas a partir das seguintes fontes:
+### 2.1. Comunicados de Resultados (Datas Relevantes)
+*   **Divulgação dos Resultados:** Os resultados do primeiro trimestre de 2026 foram divulgados por meio da Teleconferência Central de Resultados WEG, com informações disponíveis em fontes como WEG RI e veículos de mercado no dia **29 de Abril de 2026**.
 
-1.  **A Revista / Investidor10 / CNN Brasil / Investing.com:** Para indicadores de mercado, notícias trimestrais e dados de cotação.
-2.  **Artigos da A Revista (via Fetch HTML Tool):** Para detalhamento sobre a rentabilidade histórica, estrutura de capital e perspectivas de crescimento da empresa.
+### 2.2. Notícias Contextuais
+*   **Impacto Cambial:** A flutuação cambial (Real versus Dólar) foi um fator relevante que impactou a receita convertida das operações internacionais da empresa, afetando os resultados do trimestre.
+*   **Cobertura de Mercado:** Fontes como Investidor10 e Investing.com relataram as notícias e balanços da WEG em datas próximas à divulgação dos resultados (ex: 29 de Abril de 2026).
+
+---
+
+## 3. Fontes e Referências Úteis para Análise Posterior
+
+As seguintes fontes foram utilizadas para a coleta de dados factuais e podem servir como base para análises mais profundas:
+
+1.  **WEG RI (Relações com Investidores):** `https://ri.weg.net/`
+    *   *Utilidade:* Fonte primária para comunicados oficiais, demonstrações financeiras e informações corporativas da empresa.
+2.  **Investimento.com.br:** `https://br.investing.com/equities/weg-on-ej-nm-earnings`
+    *   *Utilidade:* Gráficos e dados de balanços para acompanhamento das cotações e resultados.
+3.  **MoneyTimes:** `https://www.moneytimes.com.br/weg-wege3-lucra-r-145-bilhao-no-1t26-recuo-de-57-no-ano-veja-os-numeros-do-trimestre-lmrs/`
+    *   *Utilidade:* Artigos e análises de mercado sobre os resultados financeiros da WEG.
+4.  **Investidor10:** `https://investidor10.com.br/noticias/ativo/weg/`
+    *   *Utilidade:* Notícias e acompanhamento diário sobre a empresa no mercado brasileiro.
+
+---
+
+**AVISO METODOLÓGICO:** Este dossiê foi compilado estritamente com base nos dados obtidos das fontes públicas pesquisadas até a data de referência (03 de Julho de 2026). Não foram realizadas interpretações executivas ou recomendações financeiras. Todos os fatos e números estão vinculados às fontes citadas, permitindo a rastreabilidade da informação para futuras verificações.

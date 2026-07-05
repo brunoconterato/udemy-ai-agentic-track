@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1269" height="912" viewBox="0 0 1269 912" role="img" aria-labelledby="title desc">
+  <title id="title">CrewAI tracing timeline example</title>
+  <desc id="desc">Example of the CrewAI AMP trace page with navigation, timeline events, and event details.</desc>
+  <rect width="1269" height="912" fill="#f7f8fb"/>
+  <rect x="0" y="0" width="194" height="912" fill="#ffffff"/>
+  <rect x="194" y="40" width="537" height="872" fill="#ffffff"/>
+  <rect x="731" y="40" width="538" height="872" fill="#ffffff"/>
+  <line x1="194" y1="40" x2="1269" y2="40" stroke="#dfe3ea"/>
+  <line x1="731" y1="40" x2="731" y2="912" stroke="#dfe3ea"/>
+  <text x="216" y="23" fill="#7a8494" font-family="Arial, sans-serif" font-size="13">Traces / 0c21dc41</text>
+  <circle cx="33" cy="35" r="16" fill="#ffffff" stroke="#8b1f1f" stroke-width="3"/>
+  <text x="56" y="39" fill="#3f4858" font-family="Arial, sans-serif" font-size="12">Your organiza...</text>
+  <text x="16" y="88" fill="#9aa3b2" font-family="Arial, sans-serif" font-size="12">Build</text>
+  <text x="40" y="117" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Automations</text>
+  <text x="40" y="149" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Crew Studio</text>
+  <text x="40" y="181" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Agents Repository</text>
+  <text x="40" y="213" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Tools &amp; Integrations</text>
+  <text x="16" y="254" fill="#9aa3b2" font-family="Arial, sans-serif" font-size="12">Operate</text>
+  <text x="40" y="282" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Traces</text>
+  <text x="40" y="314" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">LLM Connections</text>
+  <text x="40" y="346" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Environment Variables</text>
+  <text x="16" y="390" fill="#9aa3b2" font-family="Arial, sans-serif" font-size="12">Manage</text>
+  <text x="40" y="417" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Usage</text>
+  <text x="40" y="449" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Billing</text>
+  <text x="40" y="481" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Settings</text>
+  <text x="40" y="513" fill="#6b7485" font-family="Arial, sans-serif" font-size="13">Resources</text>
+  <text x="220" y="69" fill="#323b4b" font-family="Arial, sans-serif" font-size="14">Timeline</text>
+  <text x="758" y="69" fill="#323b4b" font-family="Arial, sans-serif" font-size="14">Event details</text>
+  <line x1="194" y1="82" x2="1269" y2="82" stroke="#e5e8ef"/>
+  <text x="743" y="100" fill="#006adc" font-family="Arial, sans-serif" font-size="13">Details</text>
+  <text x="805" y="100" fill="#8a93a3" font-family="Arial, sans-serif" font-size="13">Raw Data</text>
+  <rect x="733" y="108" width="52" height="2" fill="#006adc"/>
+  <g font-family="Arial, sans-serif" font-size="12">
+    <text x="251" y="103" fill="#303846">Pesquisador financeiro da empresa WEG</text>
+    <text x="251" y="118" fill="#8a93a3">0.01s (+49.24s)  1 task</text>
+    <text x="251" y="157" fill="#303846">pesquisa</text>
+    <text x="251" y="188" fill="#303846">Started</text>
+    <text x="251" y="224" fill="#303846">LLM call</text>
+    <text x="251" y="261" fill="#303846">SearchTool</text>
+    <text x="251" y="299" fill="#303846">LLM call</text>
+    <text x="251" y="336" fill="#303846">LLM call</text>
+    <text x="251" y="374" fill="#303846">Fetch HTML tool</text>
+    <text x="251" y="412" fill="#303846">LLM call</text>
+    <text x="251" y="449" fill="#303846">SearchTool</text>
+    <text x="251" y="488" fill="#303846">LLM call</text>
+    <text x="251" y="526" fill="#303846">Fetch HTML tool</text>
+    <text x="251" y="564" fill="#303846">LLM call</text>
+    <text x="251" y="602" fill="#303846">Completed</text>
+    <text x="251" y="650" fill="#303846">Analista de mercado focado na empresa WEG</text>
+    <text x="251" y="665" fill="#8a93a3">49.25s (+20.75s)  1 task</text>
+    <text x="251" y="706" fill="#303846">analise</text>
+    <text x="251" y="734" fill="#303846">Started</text>
+    <text x="251" y="770" fill="#303846">LLM call</text>
+    <text x="251" y="806" fill="#303846">Completed</text>
+  </g>
+  <g fill="#16b967">
+    <circle cx="239" cy="107" r="5"/>
+    <circle cx="239" cy="153" r="5"/>
+    <circle cx="239" cy="220" r="5"/>
+    <circle cx="239" cy="257" r="5"/>
+    <circle cx="239" cy="295" r="5"/>
+    <circle cx="239" cy="332" r="5"/>
+    <circle cx="239" cy="370" r="5"/>
+    <circle cx="239" cy="408" r="5"/>
+    <circle cx="239" cy="445" r="5"/>
+    <circle cx="239" cy="484" r="5"/>
+    <circle cx="239" cy="522" r="5"/>
+    <circle cx="239" cy="560" r="5"/>
+    <circle cx="239" cy="598" r="5"/>
+    <circle cx="239" cy="654" r="5"/>
+    <circle cx="239" cy="702" r="5"/>
+    <circle cx="239" cy="770" r="5"/>
+    <circle cx="239" cy="806" r="5"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="11" fill="#7b8494">
+    <text x="646" y="156">49.24s  +0.01s</text>
+    <text x="633" y="224">3.2s  +3.19s</text>
+    <text x="633" y="261">3.3s  +6.49s</text>
+    <text x="633" y="299">5.0s  +11.52s</text>
+    <text x="633" y="336">5.2s  +16.77s</text>
+    <text x="632" y="374">788ms  +17.56s</text>
+    <text x="633" y="412">6.9s  +24.43s</text>
+    <text x="633" y="449">4.5s  +28.98s</text>
+    <text x="633" y="488">5.3s  +34.31s</text>
+    <text x="633" y="526">4ms  +34.31s</text>
+    <text x="633" y="564">14.9s  +49.23s</text>
+    <text x="675" y="602">+49.24s</text>
+    <text x="646" y="706">20.75s  +49.25s</text>
+    <text x="633" y="770">20.7s  +20.75s</text>
+  </g>
+  <text x="771" y="148" fill="#17202c" font-family="Arial, sans-serif" font-size="21" font-weight="700">Crew: crew</text>
+  <text x="748" y="175" fill="#6f7888" font-family="Arial, sans-serif" font-size="13">05/07/2026, 19:54:45</text>
+  <rect x="748" y="195" width="96" height="25" rx="5" fill="#d9f8e5"/>
+  <text x="762" y="212" fill="#177342" font-family="Arial, sans-serif" font-size="13">completed</text>
+  <text x="770" y="255" fill="#17202c" font-family="Arial, sans-serif" font-size="20" font-weight="700">Crew Output</text>
+  <rect x="749" y="267" width="491" height="635" fill="#f8fafc" stroke="#dfe4ec"/>
+  <g font-family="Courier New, monospace" font-size="13" fill="#303846">
+    <text x="762" y="292"># Relatório Executivo Analítico - WEG (WEGE3)</text>
+    <text x="762" y="330">**Data da Análise:** 03 de Julho de 2026</text>
+    <text x="762" y="369">## Resumo Executivo</text>
+    <text x="762" y="410">A WEG apresenta um cenário financeiro misto no primeiro trimestr</text>
+    <text x="762" y="429">e de 2026, marcado por uma contração do lucro líquido de 5,7%</text>
+    <text x="762" y="448">YoY, impactada significativamente pela volatilidade cambial</text>
+    <text x="762" y="467">nas receitas internacionais. Apesar deste resultado intermedi</text>
+    <text x="762" y="486">ário, a empresa demonstra posicionamento estratégico agressivo,</text>
+    <text x="762" y="505">confirmando seu compromisso com o crescimento através de</text>
+    <text x="762" y="524">investimentos substanciais em ativos imobilizados e intangíveis.</text>
+    <text x="762" y="543">Superando valores praticados no ano anterior.</text>
+    <text x="762" y="641">## 1. Interpretação dos Fatos Chave</text>
+    <text x="762" y="721">Os dados factuais fornecidos não apenas mostram o desempenho</text>
+    <text x="762" y="740">financeiro recente, mas também revelam a dinâmica operacional</text>
+    <text x="762" y="759">e estratégica da WEG.</text>
+  </g>
+</svg>

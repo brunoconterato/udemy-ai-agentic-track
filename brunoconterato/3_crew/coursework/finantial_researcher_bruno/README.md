@@ -183,6 +183,69 @@ Para debugar de forma mais eficiente:
    - [Traces](https://docs.crewai.com/v1.15.1/en/enterprise/features/traces.md)
 8. Quando o erro vier do LLM ou do servidor local, confirme primeiro a conexão com o backend antes de mexer na lógica do agente.
 
+### Tracing
+
+O tracing do CrewAI ajuda a inspecionar a execução do crew sem depender só do `print()`:
+
+- mostra decisões do agente, timeline das tasks, uso de tools e chamadas ao LLM;
+- pode ser habilitado por crew/flow com `tracing=True`;
+- também pode ser ligado globalmente com `CREWAI_TRACING_ENABLED=true`;
+- para ver os traces no dashboard, use sua conta do CrewAI AMP.
+
+Fluxo de login que funcionou neste projeto:
+
+1. Abra `https://app.crewai.com` no navegador e faça login manualmente.
+2. No terminal do subprojeto, rode `uv run crewai login`.
+3. O CLI deve abrir uma página no navegador com um código de confirmação.
+4. Confira se o código mostrado no navegador bate com o código do terminal.
+5. Autorize o acesso.
+6. Confirme que o terminal terminou com algo parecido com:
+
+```text
+You are now authenticated to the tool repository for organization '...'
+Welcome to CrewAI AMP
+```
+
+Isso é útil quando você quer entender por que um agente escolheu uma tool, onde ele parou ou quanto tempo gastou em cada etapa.
+
+#### Ativação rápida
+
+1. Garanta que `CREWAI_TRACING_ENABLED=true` esteja no `.env`.
+2. Garanta que o `Crew` esteja com `tracing=True`.
+3. Faça login em `https://app.crewai.com` pelo navegador.
+4. Rode `uv run crewai login` e autorize o código no navegador.
+5. Execute o crew com `uv run finantial_researcher_bruno`.
+
+Ao final da execução, o terminal deve mostrar um bloco parecido com este:
+
+```text
+╭───────────────────────────────────────────────── Trace Batch Finalization ─────────────────────────────────────────────────╮
+│ ✅ Trace batch finalized with session ID: 0c21dc41-8e8f-42bb-a0d7-edc499509686                                             │
+│                                                                                                                            │
+│ 🔗 View here: https://app.crewai.com/crewai_plus/trace_batches/0c21dc41-8e8f-42bb-a0d7-edc499509686                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+Clique no link `View here` para abrir o trace no navegador. A tela abre na timeline da execução e ajuda a fazer o debug passo a passo.
+
+#### Como ler a timeline
+
+![Exemplo da timeline de tracing no CrewAI AMP](../../../../assets/crewai-tracing/timeline-example.svg)
+
+Na tela de trace:
+
+- a coluna da esquerda mostra a ordem dos eventos;
+- cada agente aparece como um bloco principal, com duração total e quantidade de tasks;
+- cada task aparece abaixo do agente, por exemplo `pesquisa` ou `analise`;
+- eventos `LLM call` mostram quando o agente chamou o modelo;
+- eventos de tool, como `SearchTool` e `Fetch HTML tool`, mostram quando uma ferramenta foi usada;
+- o tempo ao lado de cada evento ajuda a encontrar gargalos;
+- clique em um evento para ver os detalhes no painel da direita;
+- em `Event details`, use `Details` para ler o resumo amigável e `Raw Data` para ver os dados completos;
+- em eventos concluídos, o painel mostra o output gerado, como o relatório final do crew.
+
+Para debugar rápido, procure primeiro onde a timeline parou, qual evento demorou mais e qual input/output apareceu na tool ou chamada de LLM.
+
 ### Debug No VSCode
 
 Para debugar no VSCode, use `launch.json` apontando para o módulo do projeto:
@@ -211,6 +274,31 @@ Passos rápidos:
 3. Selecione a configuração `Debug finantial_researcher_bruno`.
 4. Inicie com `F5`.
 5. Veja os `print()` e os logs no terminal integrado enquanto o debugger estiver parado no breakpoint.
+
+#### Troubleshoot do 401
+
+Se o tracing não subir e o terminal mostrar mensagens parecidas com estas, o problema costuma ser autenticação/organização no AMP:
+
+```text
+Trace batch initialization returned status 401. Continuing without tracing.
+```
+
+ou:
+
+```text
+Authentication failed. Verify if the currently active organization can access the tool repository
+[401 error - Bad credentials - User not found]
+```
+
+Checklist rápido:
+
+1. Abra `https://app.crewai.com` no navegador e faça login manualmente.
+2. Rode `uv run crewai login` de novo no terminal do subprojeto.
+3. Confira se o código do navegador bate com o código exibido no terminal.
+4. Autorize o acesso no navegador.
+5. Confirme que o login termina com `Success!` tanto no AMP quanto no Tool Repository.
+6. Verifique se o terminal mostra um `organization '...` ativo.
+7. Rode o crew outra vez com tracing ligado.
 
 ## 🧠 Entendendo o crew
 
