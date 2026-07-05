@@ -159,13 +159,45 @@ Para debugar de forma mais eficiente:
 
 1. Comece pelo menor passo reproduzível, por exemplo um import isolado ou uma chamada curta com `uv run --no-sync`.
 2. Mantenha `verbose=True` nos agentes e tarefas enquanto estiver investigando.
-3. Use o fluxo de teste/replay do CrewAI para reproduzir uma execução específica.
-4. Consulte as páginas oficiais do CrewAI:
+3. Leia os `print()` e logs no terminal de onde você executou o comando. Se você rodou `uv run ...` no terminal integrado do VSCode, a saída aparece ali mesmo.
+4. Se o traceback ficar curto demais, procure wrappers como `raise Exception(...)` no `main.py`; eles escondem a causa original e deixam o debug pior.
+5. Use `uv run --no-sync finantial_researcher_bruno` para repetir o erro sem re-sincronizar o ambiente a cada tentativa.
+6. Use o fluxo de teste/replay do CrewAI para reproduzir uma execução específica.
+7. Consulte as páginas oficiais do CrewAI:
    - [CrewAI Documentation](https://docs.crewai.com/)
    - [CLI](https://docs.crewai.com/v1.15.1/en/concepts/cli.md)
    - [Testing](https://docs.crewai.com/v1.15.1/en/concepts/testing.md)
    - [Traces](https://docs.crewai.com/v1.15.1/en/enterprise/features/traces.md)
-5. Quando o erro vier do LLM ou do servidor local, confirme primeiro a conexão com o backend antes de mexer na lógica do agente.
+8. Quando o erro vier do LLM ou do servidor local, confirme primeiro a conexão com o backend antes de mexer na lógica do agente.
+
+### Debug No VSCode
+
+Para debugar no VSCode, use `launch.json` apontando para o módulo do projeto:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug finantial_researcher_bruno",
+      "type": "python",
+      "request": "launch",
+      "module": "finantial_researcher_bruno",
+      "cwd": "${workspaceFolder}/brunoconterato/3_crew/coursework/finantial_researcher_bruno",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}
+```
+
+Passos rápidos:
+
+1. Abra a pasta raiz do workspace no VSCode.
+2. Crie o breakpoint no `main.py`, `crew.py` ou na tool que você quer observar.
+3. Selecione a configuração `Debug finantial_researcher_bruno`.
+4. Inicie com `F5`.
+5. Veja os `print()` e os logs no terminal integrado enquanto o debugger estiver parado no breakpoint.
 
 ## 🧠 Entendendo o crew
 

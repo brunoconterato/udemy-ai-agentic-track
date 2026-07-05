@@ -3,7 +3,7 @@ pesquisador_financeiro:
     Pesquisador financeiro da empresa {company}
   goal: >
     Levantar fatos, indicadores e notícias recentes sobre a empresa {company}.
-    Obter informações em páginas da web, apenas confiáveis. 
+    Obter informações em páginas da web, apenas confiáveis.
     Para ter sucesso, a pesquisa deve:
     1. ter alta qualiade
     2. retornar números, dados, fatos e notícias atualizados para a data de {currentdate}
