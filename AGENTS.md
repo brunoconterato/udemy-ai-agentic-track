@@ -10,6 +10,7 @@ Trabalhe sempre com mudanças pequenas, focadas e fáceis de validar.
 - Antes de editar um diretório, leia o `README.md` ou a documentação local dele.
 - Se houver mais de um subprojeto, mexa só no que estiver no escopo da tarefa.
 - Prefira instruções locais quando existirem, porque elas têm prioridade sobre este arquivo.
+- Arquivos de projeto e subprojeto, especialmente `README.md`, devem começar com uma seção curta de "Início rápido" ou equivalente, com os comandos essenciais fáceis de enxergar no topo.
 
 ## Estrutura geral
 
@@ -45,3 +46,10 @@ Se um subprojeto tiver comandos próprios no `README.md`, use esses comandos ant
 - Rode o menor conjunto de checagens possível para confirmar a mudança.
 - Se não houver teste automatizado no subprojeto, explique como validou.
 - Considere pronto quando o diff ficar restrito ao escopo pedido e a alteração estiver consistente com a documentação local.
+
+## Commits
+
+- Faça `1 commit` por escopo.
+- Se a tarefa exigir mais de um escopo ou uma tarefa longa, quebre em mais de um commit por escopo quando fizer sentido.
+- Use título simples, claro e conciso.
+- Coloque no corpo do commit um resumo objetivo das mudanças feitas.
