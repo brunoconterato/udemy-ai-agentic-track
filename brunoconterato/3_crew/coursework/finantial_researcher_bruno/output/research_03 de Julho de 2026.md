@@ -1,54 +1,61 @@
-# Dossiê Factual da Empresa WEG (Weg S.A.)
+# Dossiê Factual da WEG S.A.
 
-Este dossiê foi compilado com base em informações públicas encontradas até a data de 03 de Julho de 2026, visando um registro objetivo de fatos, indicadores e notícias relevantes para análise posterior.
-
----
-
-## 1. Fatos Financeiros e Resultados Relevantes
-
-Esta seção registra os principais números e eventos financeiros divulgados pela empresa.
-
-| Categoria | Detalhe do Fato | Data/Período de Referência | Fonte Primária Encontrada |
-| :--- | :--- | :--- | :--- |
-| **Investimentos Estratégicos** | Anúncio de investimentos para expansão fabril. | Recente (mencionado em notícias) | WEG RI |
-| **Investimento em Captação** | Anúncio de investimento de US$ 77 milhões para impulsionar a capacidade produtiva. | Recente (mencionado em notícias) | WEG RI / Notícias de Mercado |
-| **Resultados do 4T25** | Lucro líquido reportado no quarto trimestre de 2025: R$ 1,588 bilhão. | 4T2025 | InfoMoney |
-| **Variação do Resultado** | O lucro do 4T25 foi 6,3% inferior ao reportado no mesmo intervalo de 2024. | Comparação 4T2025 vs 4T2024 | InfoMoney |
-| **Resultados do 3T25** | Lucro líquido referente ao terceiro trimestre de 2025: R$ 1,65 bilhão. | 3T2025 | MoneyTimes / EconomicNewsBrasil |
-| **Retorno sobre Capital** | Os resultados do 3T25 indicaram lucro e leve queda no retorno sobre capital (ROE). | 3T2025 | EconomicNewsBrasil |
-| **Demonstrações Financeiras Consolidadas** | Disponibilidade das Demonstrações Financeiras Consolidadas relativas ao exercício social encerrado em 31 de dezembro de 2024. | Exercício 2024 | WEG RI / Scribd / VIPFiles |
+**Data de Referência do Dossiê:** 03 de Julho de 2026
+**Propósito:** Levantamento de fatos, indicadores, resultados e notícias recentes para base de análise posterior.
 
 ---
 
-## 2. Notícias e Eventos Recentes
+## 1. Indicadores Financeiros (Baseados na DRE - Trimestre 1 de 2026)
 
-Esta seção lista notícias, comunicados e eventos estratégicos noticiados sobre a WEG.
+Os seguintes dados foram extraídos da Demonstração do Resultado do Exercício (DRE) divulgada em 29/04/2026, referente ao primeiro trimestre de 2026. Todas as unidades financeiras estão em Reais (R$).
 
-*   **Investimentos em Expansão Fabril:** A WEG anunciou investimentos significativos, incluindo um plano de R$ 1,1 bilhão para expansão fabril e outros investimentos regionais (ex: R$ 160 milhões em Linhares).
-*   **Aquisições Estratégicas:** Foi reportada uma aquisição estratégica no segmento de revestimentos industriais.
-*   **Análise de Mercado:** Relatórios de instituições financeiras, como o Bank of America (BofA), emitiram análises sobre a situação das ações da WEG (WEGE3).
-*   **Contexto Econômico:** O contexto econômico global e as incertezas do mercado foram fatores considerados na divulgação dos resultados.
+| Conta Financeira | Período: 01/01/2026 a 31/03/2026 (R$ mil) | % Total do Período | Período Comparativo: 01/01/2025 a 31/03/2025 (R$ mil) | % Total do Período |
+| :--- | :--- | :--- | :--- | :--- |
+| **Receita de Venda de Bens e/ou Serviços (3.01)** | R$ 9.468.313 | 100,00% | R$ 10.078.571 | 100,00% |
+| Custo dos Bens e/ou Serviços Vendidos (3.02) | -R$ 6.472.497 | -68,36% | -R$ 6.762.551 | -67,10% |
+| **Resultado Bruto (3.03)** | **R$ 2.995.816** | **31,64%** | R$ 3.316.020 | 32,90% |
+| Despesas/Receitas Operacionais (3.04) | -R$ 1.147.064 | -12,11% | -R$ 1.372.633 | -13,62% |
+| Despesas com Vendas (3.04.01) | -R$ 801.527 | -8,47% | -R$ 840.150 | -8,34% |
+| Outras Despesas de Vendas (3.04.01.02) | -R$ 791.115 | -8,36% | -R$ 829.815 | -8,23% |
+| Despesas Gerais e Administrativas (3.04.02) | -R$ 387.507 | -4,09% | -R$ 367.263 | -3,64% |
+| Resultado Líquido das Operações Continuadas (3.09) | **R$ 1.579.701** | **16,68%** | R$ 1.637.180 | 16,24% |
+| Lucro/Prejuízo Consolidado do Período (3.11) | **R$ 1.579.701** | **16,68%** | R$ 1.637.180 | 16,24% |
+| Lucro por Ação - ON (3.99.01.01) | R$ 0,34729 | 0,00% | R$ 0,36848 | 0,00% |
+
+**Observação de Indicadores Adicionais:**
+*   O Lucro por Ação (LPA) da WEG ON (WEGE3) foi registrado como R$ 0,34729 no período analisado.
+*   A demonstração indica uma performance positiva nas Operações Continuadas e Consolidadas.
 
 ---
 
-## 3. Indicadores de Mercado e Referências
+## 2. Notícias, Eventos e Contexto Relevante
 
-Informações disponíveis para referência de indicadores:
+As seguintes notícias e informações foram coletadas de fontes públicas:
 
-*   **Ticker:** WEGE3 (Bolsa de Valores)
-*   **Indicadores Disponíveis:** Cotações, gráficos, dividendos e balanços estão acessíveis através das plataformas de mercado (Investing.com, Valor Empresas 360, Advfn Brasil).
-*   **Relatórios Anuais:** Os Relatórios Anuais da empresa estão disponíveis na seção de Relações com Investidores (RI) do site oficial.
+**A. Informações Estruturais e Crescimento:**
+*   **Perfil Corporativo:** A WEG é caracterizada como uma empresa global de eficiência energética e geração de energia renovável de rápido crescimento.
+*   **Crescimento Histórico:** A empresa possui uma Taxa de Crescimento Anual Composta (CAGR) de 17,6% ao longo dos últimos 29 anos, com crescimento orgânico e aquisições.
+*   **Posicionamento de Mercado:** A WEG demonstra um lucro bilionário recorrente e um ROIC (Retorno sobre o Capital Investido) acima de 30%, indicando fundamentos sólidos em 2026.
+*   **Projeção de Investimento (Referência):** O orçamento de capital prevê investimentos de R$ 2.661,6 milhões em ativos imobilizados e R$ 12,3 milhões em ativos intangíveis para o período de 2025 (referência de projeção estratégica).
+
+**B. Comunicados e Resultados Recentes:**
+*   **Resultados do Primeiro Trimestre de 2026 (1T26):** Foi divulgado um resultado trimestral, refletindo a performance da empresa no período mais recente.
+*   **Apresentação para Investidores (Evento):** Houve uma apresentação pública realizada em Fevereiro de 2026 (data: 26/02/2026) focada na estratégia e no crescimento da empresa.
 
 ---
 
-## 4. Fontes e Referências Úteis para Análise Posterior
+## 3. Fontes e Referências Úteis
 
-As fontes listadas abaixo devem ser utilizadas como base para a verificação e aprofundamento de qualquer análise subsequente.
+As seguintes fontes foram utilizadas para a coleta de dados e devem ser consideradas para análise posterior:
 
-*   **Relacionamento com Investidores (RI):** `https://ri.weg.net/` (Para demonstrações financeiras, relatórios anuais e comunicados oficiais).
-*   **Plataformas de Mercado:** `https://br.investing.com/equities/weg-on-ej-nm`, `https://valor.globo.com/empresas/valor-empresas-360/weg/` (Para cotações, gráficos e indicadores).
-*   **Notícias Financeiras:** `https://www.infomoney.com.br/mercados/weg-a-boa-e-a-ma-noticia-para-quem-tem-ou-pensa-em-comprar-as-acoes-wege3/` (Para análises de mercado e notícias).
-*   **Publicações de Resultados:** Relatórios divulgados por fontes como InfoMoney, MoneyTimes e EconomicNewsBrasil.
+1.  **Relações com Investidores (RI) WEG:** `https://ri.weg.net/`
+    *   *Utilidade:* Fonte primária para comunicados, relatórios anuais, demonstrações financeiras oficiais e eventos corporativos.
+2.  **InvestSite:** `https://www.investsite.com.br/demonstracao_resultado.php?cod_negociacao=WEGE3`
+    *   *Utilidade:* Fonte direta para a Demonstração do Resultado detalhada, permitindo a comparação de períodos.
+3.  **InfoMoney:** `https://www.infomoney.com.br/mercados/weg-wege3-resultados-primeiro-trimestre-2026/`
+    *   *Utilidade:* Notícias e contextualização dos resultados financeiros.
+4.  **Acionista.com.br (PDF):** `https://acionista.com.br/wp-content/uploads/2026/02/WEG_S.A.-Comunicado_ao_Mercado-Apresentacao_para_Investidores_-26-02-2026.pdf`
+    *   *Utilidade:* Documentos formais de apresentação estratégica da companhia para investidores.
 
-***
-*Este dossiê é um registro factual dos dados públicos disponíveis na pesquisa até a data especificada, e não constitui uma análise ou recomendação de investimento.*
+---
+**Resumo Metodológico:** Os dados foram coletados focando em documentos e notícias publicadas até o dia 03 de Julho de 2026, priorizando fontes oficiais (RI) e agregadores financeiros confiáveis (InvestSite), assegurando que a informação seja baseada em evidências.
