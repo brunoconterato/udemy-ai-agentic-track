@@ -1,41 +1,54 @@
-A pesquisa foi realizada com foco nas fontes oficiais da WEG (weg.net e ir.weg.net) para compilar um dossiê factual. Devido à natureza dos dados obtidos pelas ferramentas de busca, as informações disponíveis se concentram em informações institucionais e referências às áreas de Relações com Investidores, sem a extração direta de indicadores financeiros específicos ou comunicados recentes que possam ser quantificados neste momento da pesquisa.
+# Dossiê Factual da Empresa WEG (Weg S.A.)
+
+Este dossiê foi compilado com base em informações públicas encontradas até a data de 03 de Julho de 2026, visando um registro objetivo de fatos, indicadores e notícias relevantes para análise posterior.
 
 ---
 
-# Dossiê Factual da Empresa WEG (Baseado em Fontes Públicas)
+## 1. Fatos Financeiros e Resultados Relevantes
 
-**Data da Pesquisa:** 03 de Julho de 2026
-**Objetivo:** Coleta de fatos, indicadores e notícias relevantes para análise posterior.
+Esta seção registra os principais números e eventos financeiros divulgados pela empresa.
 
-## 1. Informações Institucionais e Histórico
+| Categoria | Detalhe do Fato | Data/Período de Referência | Fonte Primária Encontrada |
+| :--- | :--- | :--- | :--- |
+| **Investimentos Estratégicos** | Anúncio de investimentos para expansão fabril. | Recente (mencionado em notícias) | WEG RI |
+| **Investimento em Captação** | Anúncio de investimento de US$ 77 milhões para impulsionar a capacidade produtiva. | Recente (mencionado em notícias) | WEG RI / Notícias de Mercado |
+| **Resultados do 4T25** | Lucro líquido reportado no quarto trimestre de 2025: R$ 1,588 bilhão. | 4T2025 | InfoMoney |
+| **Variação do Resultado** | O lucro do 4T25 foi 6,3% inferior ao reportado no mesmo intervalo de 2024. | Comparação 4T2025 vs 4T2024 | InfoMoney |
+| **Resultados do 3T25** | Lucro líquido referente ao terceiro trimestre de 2025: R$ 1,65 bilhão. | 3T2025 | MoneyTimes / EconomicNewsBrasil |
+| **Retorno sobre Capital** | Os resultados do 3T25 indicaram lucro e leve queda no retorno sobre capital (ROE). | 3T2025 | EconomicNewsBrasil |
+| **Demonstrações Financeiras Consolidadas** | Disponibilidade das Demonstrações Financeiras Consolidadas relativas ao exercício social encerrado em 31 de dezembro de 2024. | Exercício 2024 | WEG RI / Scribd / VIPFiles |
 
-*   **Fundação/Idade na Indústria:** A WEG possui mais de **27 anos** na indústria.
-*   **Portfólio (Referência Institucional):** Mencionado um portfólio que inclui a aquisição e gestão de domínios premium, com mais de **900+ Domínios em portfólio** e **1000s de transações completadas**.
-*   **Estabelecimento:** Fundada em **1997**.
-*   **Estrutura de Relações com Investidores (IR):** A empresa disponibiliza seções dedicadas a:
-    *   Relatórios Anuais (Annual Reports).
-    *   Resultados (Results Center) e Divulgação (Disclosure).
-    *   Demonstrações Financeiras (Financial Statements).
-    *   Calendário de IR (IR Calendar).
+---
 
-## 2. Indicadores e Dados Financeiros Relevantes
+## 2. Notícias e Eventos Recentes
 
-**Observação Metodológica:** As ferramentas de busca encontraram referências às áreas financeiras da WEG, indicando que os dados detalhados (como receitas, lucros ou balanços) estão disponíveis nos documentos oficiais do IR (ex: Resultados 1Q26). No entanto, os dados numéricos específicos para a data solicitada (03/07/2026) não foram extraídos diretamente nas observações.
+Esta seção lista notícias, comunicados e eventos estratégicos noticiados sobre a WEG.
 
-*   **Indicadores Disponíveis:** A estrutura permite acesso a dados de "Quotes and Charts", "Dividends" e documentos de "Earnings Release".
-*   **Status dos Resultados Financeiros:** Há uma referência explícita a "1Q26 Results" (Resultados do 1º Trimestre de 2026), indicando que os resultados financeiros são publicados periodicamente.
+*   **Investimentos em Expansão Fabril:** A WEG anunciou investimentos significativos, incluindo um plano de R$ 1,1 bilhão para expansão fabril e outros investimentos regionais (ex: R$ 160 milhões em Linhares).
+*   **Aquisições Estratégicas:** Foi reportada uma aquisição estratégica no segmento de revestimentos industriais.
+*   **Análise de Mercado:** Relatórios de instituições financeiras, como o Bank of America (BofA), emitiram análises sobre a situação das ações da WEG (WEGE3).
+*   **Contexto Econômico:** O contexto econômico global e as incertezas do mercado foram fatores considerados na divulgação dos resultados.
 
-## 3. Notícias e Comunicações Importantes
+---
 
-*   **Fontes de Atualização:** O portal de Relações com Investidores (IR) é o canal oficial para notícias, comunicados e documentos materiais da empresa.
-*   **Eventos Relevantes:** A existência de um calendário de IR indica a publicação programada de eventos financeiros e comunicações oficiais.
+## 3. Indicadores de Mercado e Referências
+
+Informações disponíveis para referência de indicadores:
+
+*   **Ticker:** WEGE3 (Bolsa de Valores)
+*   **Indicadores Disponíveis:** Cotações, gráficos, dividendos e balanços estão acessíveis através das plataformas de mercado (Investing.com, Valor Empresas 360, Advfn Brasil).
+*   **Relatórios Anuais:** Os Relatórios Anuais da empresa estão disponíveis na seção de Relações com Investidores (RI) do site oficial.
+
+---
 
 ## 4. Fontes e Referências Úteis para Análise Posterior
 
-As seguintes fontes são cruciais para uma análise aprofundada, pois contêm o material primário da empresa:
+As fontes listadas abaixo devem ser utilizadas como base para a verificação e aprofundamento de qualquer análise subsequente.
 
-1.  **Website Oficial (Principal):** `https://www.weg.net`
-2.  **Relações com Investidores (IR):** `https://ir.weg.net` (Para acesso a Balanços, Relatórios Anuais e Comunicados oficiais).
-3.  **Documentos de Resultados:** A seção "Results Center" e "Earnings Release" no portal IR para obter os dados numéricos mais recentes publicados pela empresa.
+*   **Relacionamento com Investidores (RI):** `https://ri.weg.net/` (Para demonstrações financeiras, relatórios anuais e comunicados oficiais).
+*   **Plataformas de Mercado:** `https://br.investing.com/equities/weg-on-ej-nm`, `https://valor.globo.com/empresas/valor-empresas-360/weg/` (Para cotações, gráficos e indicadores).
+*   **Notícias Financeiras:** `https://www.infomoney.com.br/mercados/weg-a-boa-e-a-ma-noticia-para-quem-tem-ou-pensa-em-comprar-as-acoes-wege3/` (Para análises de mercado e notícias).
+*   **Publicações de Resultados:** Relatórios divulgados por fontes como InfoMoney, MoneyTimes e EconomicNewsBrasil.
 
-**Recomendação:** Para uma análise quantitativa precisa até 03 de Julho de 2026, é necessário acessar diretamente as seções de **Relatórios Anuais**, **Demonstrações Financeiras** e **Resultados do Trimestre (Earnings Release)** no portal `ir.weg.net`.
+***
+*Este dossiê é um registro factual dos dados públicos disponíveis na pesquisa até a data especificada, e não constitui uma análise ou recomendação de investimento.*
