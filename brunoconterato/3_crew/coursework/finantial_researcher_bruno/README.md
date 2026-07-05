@@ -77,6 +77,19 @@ Arquivos principais para adaptação:
 - `src/finantial_researcher_bruno/crew.py` para adicionar lógica, ferramentas e argumentos específicos
 - `src/finantial_researcher_bruno/main.py` para incluir entradas personalizadas para agentes e tarefas
 
+## 🧭 Como orientar o uso de tools
+
+Quando você quiser que um agente use uma tool de forma mais direta, escreva a instrução no `goal`, no `description` da task e no `expected_output`.
+
+Exemplo prático para este projeto:
+
+- primeiro faça a busca;
+- depois, para cada página que parecer relevante, chame `fetch_html_tool`;
+- extraia fatos, números e trechos úteis dessa página antes de seguir para a próxima;
+- registre na resposta quais páginas foram lidas com a tool.
+
+Esse tipo de orientação funciona para qualquer tool: diga quando usar, em qual ordem, o que extrair e o que fazer se a tool falhar.
+
 ## ▶️ Como rodar
 
 Depois de instalar as dependências, execute o crew a partir da raiz do subprojeto com:
