@@ -40,7 +40,9 @@ class FetchHTMLInput(BaseModel):
 
 class FetchHTMLTool(BaseTool):
     name: str = "Fetch HTML tool"
-    description: str = "Tool used for extract html content from a given url for fetching data porposes"
+    description: str = (
+        "Tool used for extract html content from a given url for fetching data porposes"
+    )
     args_schema: Type[BaseModel] = FetchHTMLInput
 
     def _run(self, url: str) -> str | None:
@@ -49,10 +51,18 @@ class FetchHTMLTool(BaseTool):
             try:
                 downloaded = fetch_url(candidate)
                 if downloaded:
-                    result = extract(downloaded)
+                    result = extract(
+                        downloaded,
+                        favor_recall=True,
+                        favor_precision=False,
+                        include_comments=False,
+                        include_tables=True,
+                        output_format="markdown",
+                    )
                     if result:
-                        return result[:6000]
-            except Exception:
+                        return result
+            except Exception as e:
+                print("Exception for url: ", candidate, " --> ", e)
                 continue
 
         return None

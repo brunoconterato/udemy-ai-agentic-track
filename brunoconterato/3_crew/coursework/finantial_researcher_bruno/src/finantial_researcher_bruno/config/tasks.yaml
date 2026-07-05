@@ -9,22 +9,23 @@ pesquisa:
     4. Evitar conclusões executivas profundas ou recomendações
     5. Organizar a resposta em seções claras, objetivas e fáceis de consultar
     IMPORTANTE: sua informação deve ser relevante para a data de {currentdate}.
-    Ao usar a ferramenta de busca, use URL completa no campo website.
+    Ao usar a ferramenta de busca, use URL completa no campo `url`.
     Se o site não estiver indisponivel, registre a limitacao e continue
     a pesquisa com outras fontes publicas.
     Use apenas Fontes confiáveis.
     Use essa ferramenta assim: primeiro faça uma busca;
-    depois, para cada página que parecer relevante, chame `fetch_html_tool`;
+    depois, para cada página que parecer relevante, chame `Fetch HTML tool`;
     extraia fatos, números e trechos úteis dessa página antes de seguir para a próxima;
-    registre na resposta quais páginas foram lidas com a too;
+    registre na resposta quais páginas foram lidas com a tool;
     faça mais buscas se necessário.
+    Limites mínimos: 1 searches + 2 fetchcs de html. 
     Limites máximos: 2 searches + 5 fetchs de html.
   expected_output: >
     Um dossiê de pesquisa sobre a empresa {company} com fatos principais,
     indicadores encontrados, eventos relevantes e fontes ou referências úteis.
     O texto deve ser descritivo e voltado à coleta de informação.
   agent: pesquisador_financeiro
-  output_file: output/research_{currentdate}.md
+  output_file: output/research_{company}_{currentdate}.md
 
 analise:
   description: >
@@ -43,4 +44,4 @@ analise:
   agent: analista_financeiro
   context:
     - pesquisa
-  output_file: output/report_{currentdate}.md
+  output_file: output/report_{company}_{currentdate}.md
