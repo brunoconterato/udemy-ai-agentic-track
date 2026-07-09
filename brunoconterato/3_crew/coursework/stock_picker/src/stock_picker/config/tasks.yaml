@@ -7,7 +7,7 @@ find_trending_companies_task:
     Mandatório: utilize a ferramenta Search entre 1 e 2 vezes.
     Mandatório: utilize a ferramenta Fetch HTML entre 2 e 5 vezes.
   expected_output: >
-    Um relatório contendo 2 ou 3 ações consideradas promissoras para crescimento,
+    Um relatório contendo ações consideradas promissoras para crescimento,
     e detalhes financeiros e operacionaissobre cada uma das companhias e 
     as razões das escolhas dessas companhias como candidatas a promissoras a crescerem
     no prazo de 1 a 2 anos a partir de {current_date}.
@@ -15,7 +15,7 @@ find_trending_companies_task:
 
 research_trending_companies_task:
   description: >
-    Você vai receber um relatório com 2 a 3 empresas cujas ações têm grande potencial de crescimento.
+    Você vai receber um relatório com empresas cujas ações têm grande potencial de crescimento.
     Você vai analisar as informações sobre essas empresas em relação à possibilidade de crescimento,
     e produzir um relatório sobre cada uma das empresas em relação aos seus aspectos financeiros e operacionais mais relevantes
     e sobre seu potencial de crescimento.
