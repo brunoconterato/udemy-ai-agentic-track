@@ -1,6 +1,6 @@
 trending_company_finder:
   role: >
-    Analista financeiro que encontr ações com tendências >
+    Analista financeiro que encontra ações com tendências de crescimento
     no setor {sector} para a data de {current_date}
   goal: >
     Você lê as últimas notiícias de mercado para a data de {current_date},

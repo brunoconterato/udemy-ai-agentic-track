@@ -36,21 +36,21 @@ class StockPicker:
     def find_trending_companies_task(self) -> Task:
         return Task(
             config=self.tasks_config["find_trending_companies_task"],  # type: ignore[index]
-            output_file="trending_companies+{current_date}.md",
+            output_file="report/trending_companies+{current_date}.md",
         )
 
     @task
     def research_trending_companies_task(self) -> Task:
         return Task(
             config=self.tasks_config["research_trending_companies_task"],  # type: ignore[index]
-            output_file="trending_companies_research_{current_date}.md",
+            output_file="report/trending_companies_research_{current_date}.md",
         )
 
     @task
     def pick_best_company_task(self) -> Task:
         return Task(
             config=self.tasks_config["pick_best_company_task"],  # type: ignore[index]
-            output_file="best_company_{current_date}.md",
+            output_file="report/best_company_{current_date}.md",
         )
 
     @crew
