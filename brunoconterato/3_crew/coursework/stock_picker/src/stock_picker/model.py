@@ -25,6 +25,7 @@ class TrendingStocksList(BaseModel):
 
 class TrendingCompanyResearch(BaseModel):
     name: str = Field(description="Nome da empresa")
+    ticker: str = Field(description="Símbolo oficial da ação na bolsa de valores")
     market_position: str = Field(
         description="Posição atual no mercado e análise competitiva"
     )
@@ -44,7 +45,7 @@ class TrendingCompaniesResearchList(BaseModel):
 
 class SelectedCompany(BaseModel):
     name: str = Field(description="Nome da empresa")
-    ticker: str = Field(description="Símbolo da empresa na bolsa de valores")
+    ticker: str = Field(description="Símbolo oficial da ação na bolsa de valores")
     description: str = Field(description="Descrição da atividade da empresa")
     reasons: List[str] = Field(
         description="Lista de razões pelos quais a empresa possui potencial de crescimento"
