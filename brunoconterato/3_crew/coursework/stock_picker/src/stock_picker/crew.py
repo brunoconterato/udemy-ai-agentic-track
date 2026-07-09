@@ -2,10 +2,10 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 
-from .tools.fetch_html_tool import FetchHTMLTool
-from .tools.search_tool import SearchTool
+from stock_picker.tools.fetch_html_tool import FetchHTMLTool
+from stock_picker.tools.search_tool import SearchTool
 
-from .model import TrendingStocksList, TrendingCompaniesResearchList, SelectedCompany
+from stock_picker.model import TrendingStocksList, TrendingCompaniesResearchList, SelectedCompany
 
 
 @CrewBase
@@ -23,6 +23,7 @@ class StockPicker:
             tools=[SearchTool(), FetchHTMLTool()],
             max_iter=6,
             max_retry_limit=2,
+            # memory=True,
         )
 
     @agent
@@ -30,6 +31,7 @@ class StockPicker:
         return Agent(
             config=self.agents_config["financial_researcher"],  # type: ignore[index]
             verbose=True,
+            # memory=True,
         )
 
     @agent
@@ -37,6 +39,7 @@ class StockPicker:
         return Agent(
             config=self.agents_config["stock_picker"],
             verbose=True,
+            memory=True,
         )
 
     @task
@@ -71,4 +74,12 @@ class StockPicker:
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            memory=True,
+            embedder={
+                "provider": "ollama",
+                "config": {
+                    "model_name": "nomic-embed-text:latest",
+                    "url": "http://localhost:11434/api/embeddings",
+                },
+            },
         )
