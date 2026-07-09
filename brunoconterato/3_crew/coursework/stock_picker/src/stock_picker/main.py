@@ -14,7 +14,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        'sector': 'Energia',
+        'sector': 'All',
         'current_date': '09 de julho de 2026'
     }
 

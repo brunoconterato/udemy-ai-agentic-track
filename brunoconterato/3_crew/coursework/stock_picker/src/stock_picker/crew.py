@@ -22,7 +22,7 @@ class TrendingStock(BaseModel):
     )
 
 
-class TrendingStockList(BaseModel):
+class TrendingStocksList(BaseModel):
     """Lista de empresas que estão se destacando nas notícias"""
 
     companies: List[TrendingStock] = Field(
@@ -43,7 +43,7 @@ class TrendingCompanyResearch(BaseModel):
     )
 
 
-class TrendindCompanyResearchList(BaseModel):
+class TrendingCompaniesResearchList(BaseModel):
     companies: List[TrendingCompanyResearch] = Field(
         description="Lista de análises de empresas mostrando potencial de crescimento inferido",
         min_length=2,
@@ -55,7 +55,7 @@ class SelectedCompany(BaseModel):
     name: str = Field(description="Nome da empresa")
     ticker: str = Field(description="Símbolo da empresa na bolsa de valores")
     description: str = Field(description="Descrição da atividade da empresa")
-    reasonns: List[str] = Field(
+    reasons: List[str] = Field(
         description="Lista de razões pelos quais a empresa possui potencial de crescimento"
     )
 
@@ -73,7 +73,8 @@ class StockPicker:
             config=self.agents_config["trending_company_finder"],  # type: ignore[index]
             verbose=True,
             tools=[SearchTool(), FetchHTMLTool()],
-            output_pydantic=TrendingStockList,
+            max_iter=6,
+            max_retry_limit=2,
         )
 
     @agent
@@ -81,7 +82,6 @@ class StockPicker:
         return Agent(
             config=self.agents_config["financial_researcher"],  # type: ignore[index]
             verbose=True,
-            output_pydantic=TrendindCompanyResearchList,
         )
 
     @agent
@@ -89,7 +89,6 @@ class StockPicker:
         return Agent(
             config=self.agents_config["stock_picker"],
             verbose=True,
-            output_pydantic=SelectedCompany,
         )
 
     @task
@@ -97,6 +96,7 @@ class StockPicker:
         return Task(
             config=self.tasks_config["find_trending_companies_task"],  # type: ignore[index]
             output_file="report/trending_companies+{current_date}.md",
+            output_pydantic=TrendingStocksList,
         )
 
     @task
@@ -104,6 +104,7 @@ class StockPicker:
         return Task(
             config=self.tasks_config["research_trending_companies_task"],  # type: ignore[index]
             output_file="report/trending_companies_research_{current_date}.md",
+            output_pydantic=TrendingCompaniesResearchList,
         )
 
     @task
@@ -111,6 +112,7 @@ class StockPicker:
         return Task(
             config=self.tasks_config["pick_best_company_task"],  # type: ignore[index]
             output_file="report/best_company_{current_date}.md",
+            output_pydantic=SelectedCompany,
         )
 
     @crew
