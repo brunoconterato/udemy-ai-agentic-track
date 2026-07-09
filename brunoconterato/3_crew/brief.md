@@ -9,14 +9,15 @@ Projetos CrewAI são, por padrão, projetos **UV** (um gerenciador de pacotes Py
 - **Instalação do CLI:** `uv tool install --with crewai-tools crewai@latest`
 - **Atualizar o CLI:** `uv tool upgrade crewai`
 - **Ativar ambiente venv:** `source .venv/bin/activate`
-- **Criar novo projeto:** `crewai create crew meu_projeto`
+- **Criar novo projeto:** `uv run --active crewai create crew meu_projeto --classic`
 - **Executar o projeto:** `crewai run`
 
 ### CLI útil para esta sessão
 
 Resumo curto dos comandos que mais ajudam nesta parte do curso:
 
-- `crewai create crew <nome>`: cria a estrutura inicial de uma crew nova.
+- `crewai create crew <nome> --classic`: cria a estrutura inicial clássica de uma crew nova.
+- `uv run --active crewai create crew <nome> --classic`: executa o criador usando o ambiente ativo do UV.
 - `crewai install`: instala as dependências do projeto criado.
 - `crewai run`: executa a crew com a configuração atual.
 - `source .venv/bin/activate && crewai run`: ativa o venv local e roda a crew nele.
@@ -35,8 +36,8 @@ Siga estes cinco passos na
 ordem para criar, configurar e executar um projeto CrewAI de forma prática.
 
 1. Criar o projeto
-   - Execute: `crewai create crew meu_projeto`
-   - Observação: esse comando gera a estrutura inicial do projeto (veja a seção "Estrutura de Diretórios Recomendada" abaixo).
+   - Execute: `uv run --active crewai create crew meu_projeto --classic`
+   - Observação: esse comando gera a estrutura inicial clássica do projeto e usa o ambiente ativo do UV (veja a seção "Estrutura de Diretórios Recomendada" abaixo).
 
 2. Preencher os arquivos de configuração (YAML)
    - Edite `src/meu_projeto/config/agents.yaml` e `src/meu_projeto/config/tasks.yaml` para definir seus **Agents** e **Tasks**.
@@ -324,6 +325,184 @@ escrever_artigo = Task(
 
 Aqui, `escrever_artigo` recebe como contexto o que foi produzido em `mapear_tendencias`, então ela não precisa repetir a pesquisa do zero.
 
+### 6. Recursos avançados do CrewAI
+
+Além dos conceitos base, o CrewAI também destaca alguns recursos que ajudam a organizar fluxos mais robustos. A ideia aqui não é decorar a API inteira, mas entender como cada recurso resolve um problema prático.
+
+#### 6.1 Structured outputs
+
+Use `structured outputs` quando você quer que a saída venha em um formato previsível, fácil de validar e consumir por código.
+
+Exemplo simples com um modelo estruturado:
+
+```python
+from pydantic import BaseModel, Field
+from crewai import Agent, Task
+
+
+class ResumoTendencias(BaseModel):
+    topico: str = Field(..., description="Tema analisado")
+    pontos_chave: list[str] = Field(..., description="Lista com os achados principais")
+    conclusao: str = Field(..., description="Resumo final curto")
+
+
+pesquisador = Agent(
+    role="Pesquisador de Mercado",
+    goal="Encontrar tendências sobre IA aplicada a negócios",
+    backstory="Você organiza informações de forma clara e objetiva.",
+)
+
+tarefa = Task(
+    description="Analise o tema e devolva um resumo estruturado.",
+    expected_output="Um objeto com topico, pontos_chave e conclusao.",
+    agent=pesquisador,
+    output_pydantic=ResumoTendencias,
+)
+```
+
+Na prática, isso é útil quando a próxima etapa precisa ler os dados sem fazer parsing de texto livre.
+
+#### 6.2 Custom tool
+
+Use uma `custom tool` quando o agente precisa acessar uma fonte ou executar uma ação específica de forma controlada.
+
+Exemplo de tool simples para consultar uma lista local:
+
+```python
+from crewai_tools import BaseTool
+
+
+class BuscarGlossarioTool(BaseTool):
+    name: str = "buscar_glossario"
+    description: str = "Procura um termo em um glossário local e retorna a definição."
+
+    def _run(self, termo: str) -> str:
+        glossario = {
+            "agent": "Entidade que toma decisões com base em um objetivo.",
+            "task": "Trabalho específico atribuído a um agente.",
+        }
+        return glossario.get(termo.lower(), "Termo não encontrado.")
+
+
+pesquisador = Agent(
+    role="Pesquisador",
+    goal="Explicar conceitos do curso de forma simples",
+    tools=[BuscarGlossarioTool()],
+)
+```
+
+Aqui o agente continua decidindo, mas agora consulta uma fonte confiável e limitada por nós.
+
+#### 6.3 Hierarchical process
+
+Use `hierarchical process` quando você quer que um agente gerente distribua o trabalho e acompanhe a execução dos demais.
+
+Exemplo conceitual:
+
+```python
+from crewai import Agent, Task, Crew, Process
+
+gerente = Agent(
+    role="Manager",
+    goal="Organizar as tarefas e decidir a melhor ordem de execução",
+)
+
+pesquisador = Agent(role="Pesquisador", goal="Levantar dados relevantes")
+redator = Agent(role="Redator", goal="Transformar a pesquisa em texto final")
+
+tarefa1 = Task(description="Pesquisar o tema", agent=pesquisador)
+tarefa2 = Task(description="Escrever o relatório", agent=redator)
+
+equipe = Crew(
+    agents=[gerente, pesquisador, redator],
+    tasks=[tarefa1, tarefa2],
+    process=Process.hierarchical,
+    manager_agent=gerente,
+)
+```
+
+Esse modelo faz mais sentido quando existem várias etapas e você quer mais coordenação do que uma simples sequência fixa.
+
+#### 6.4 Unified memory
+
+Use `unified memory` quando a crew precisa lembrar preferências, contexto ou decisões anteriores ao longo da conversa.
+
+Exemplo simplificado:
+
+```python
+from crewai import Agent, Task, Crew, Process
+
+atendente = Agent(
+    role="Assistente",
+    goal="Responder sempre considerando o histórico do usuário",
+    memory=True,
+)
+
+tarefa = Task(
+    description="Responder à dúvida atual com base no histórico disponível.",
+    agent=atendente,
+)
+
+equipe = Crew(
+    agents=[atendente],
+    tasks=[tarefa],
+    process=Process.sequential,
+    memory=True,
+)
+```
+
+Isso ajuda a evitar repetições e deixa a experiência mais consistente quando a interação acontece em várias etapas.
+
+Em resumo, esses recursos são extensões naturais dos conceitos de `Agent`, `Task`, `Tools` e `Context`:
+
+- `Structured outputs` deixam a saída previsível.
+- `Custom tool` conecta o agente a ações ou fontes específicas.
+- `Hierarchical process` adiciona coordenação entre agentes.
+- `Unified memory` mantém continuidade entre interações.
+
+### Tracing
+
+`Tracing` ajuda a acompanhar a execução do crew com mais clareza, principalmente quando você quer entender decisões, uso de tools e sequência das tasks.
+
+Fluxo que funciona neste projeto:
+
+1. Crie conta em `https://app.crewai.com` e faça login manualmente no navegador.
+2. No terminal do subprojeto, rode `uv run crewai login` para conectar a conta local.
+3. O CLI deve abrir uma página no navegador com um código de confirmação.
+4. Confira se o código mostrado no navegador bate com o código exibido no terminal.
+5. Autorize o acesso.
+6. Ative o tracing com `tracing=True` no `Crew` ou com `CREWAI_TRACING_ENABLED=true` no ambiente.
+
+Exemplo de configuração mínima:
+
+```python
+from crewai import Crew
+
+equipe = Crew(
+  agents=[pesquisador, redator],
+  tasks=[tarefa_pesquisa, tarefa_escrita],
+  process=Process.sequential,
+  tracing=True,
+)
+```
+
+E, no `.env`:
+
+```text
+CREWAI_TRACING_ENABLED=true
+```
+
+Quando tudo estiver certo, o terminal deve terminar com algo parecido com:
+
+```text
+You are now authenticated to the tool repository for organization '...'
+Welcome to CrewAI AMP
+```
+
+Com isso, os traces passam a aparecer no dashboard do CrewAI AMP e você consegue inspecionar decisões do agente, timeline das tasks, uso de tools e chamadas ao LLM.
+
 ---
 
 _Nota: CrewAI permite um alto nível de prescrição, permitindo que você defina fluxos de trabalho complexos e comportamentos específicos para cada componente._
+
+### 7. 

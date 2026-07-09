@@ -1,0 +1,36 @@
+find_trending_companies_task:
+  description: >
+    Você vai conduzir pesquisas das últimas notícias sobre mercados financeiros e suas companhias.
+    Garanta que a pesquisa seja atual para a data de {current_date}.
+    A partir da pesquisa, você vai escolher 2 ou 3 companhias cujas ações tem grande potencial de crescimento.
+    Escreva um relatório sobre essas açoes.
+  expected_output: >
+    Um relatório contendo 2 ou 3 ações consideradas promissoras para crescimento,
+    e detalhes financeiros e operacionaissobre cada uma das companhias e 
+    as razões das escolhas dessas companhias como candidatas a promissoras a crescerem
+    no prazo de 1 a 2 anos a partir de {current_date}.
+  agent: trending_company_finder
+
+research_trending_companies_task:
+  description: >
+    Você vai receber um relatório com 2 a 3 empresas cujas ações têm grande potencial de crescimento.
+    Você vai analisar as informações sobre essas empresas em relação à possibilidade de crescimento,
+    e produzir um relatório sobre cada uma das empresas em relação aos seus aspectos financeiros e operacionais mais relevantes
+    e sobre seu potencial de crescimento.
+    O relatório precisa ser atual para a data de {current_date}.
+  expected_output: >
+    Um relatório detalhado sobre finanças e operações de 2 a 3 empresas com ações de reconhecido potencial de crescimento.
+    Esse relatório precisa estar atualizado para a data de {current_date}.
+    Esse relatório precisa analisar a capacidade de crescimento de cada uma dessas companhias
+    nós próximos 1 a 2 anos a partir de {current_date}
+  agent: financial_researcher
+
+pick_best_company_task:
+  description: >
+    Você receberá um relatório sobre finanças e operações atualizado para a data de {current date} para 2 ou 3 companhias.
+    Você deverá analisar o relatório e escolher a companhia cuja ação possui maior potencial de crescimento nos próximos 1 a 2 anos.
+  expected_output: >
+    Um relatório com uma ação, descriçao de finanças e operações e
+    das razões que comprovam seu grande potencial de crescimento
+    nos próximos 1 a 2 anos a partir de {current_date}
+  agent: stock_picker
