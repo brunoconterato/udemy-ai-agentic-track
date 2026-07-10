@@ -5,7 +5,11 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from stock_picker.tools.fetch_html_tool import FetchHTMLTool
 from stock_picker.tools.search_tool import SearchTool
 
-from stock_picker.model import TrendingStocksList, TrendingCompaniesResearchList, SelectedCompany
+from stock_picker.model import (
+    TrendingStocksList,
+    TrendingCompaniesResearchList,
+    SelectedCompany,
+)
 
 
 @CrewBase
@@ -69,10 +73,26 @@ class StockPicker:
     @crew
     def crew(self) -> Crew:
         """Creates the StockPicker crew"""
+        stock_picker_manager = Agent(
+            role="Workflow Manager",
+            goal="Orchestrate entire task execution across agents and handle complex decision-making.",
+            backstory="""You are the chief manager of a stock analysis crew. You have full control to delegate, oversee progress, reassign tasks when needed based on each agent's strengths, coordinate between financial research teams like 'trending_company_finder' and 'financial_researcher', review final recommendations from the 'stock_picker', resolve conflicts in findings or strategy shifts during market trends changes.""",
+            allow_delegation=True,  # Enabled to delegate subtasks across other agents when needed dynamically. You have ultimate authority over workflow control.
+            max_iter=6,  # Keep manager iterations reasonable for orchestration loops without excessive retries.
+            embedder={
+                "provider": "ollama",
+                "config": {
+                    "model_name": "nomic-embed-text:latest",
+                    "url": "http://localhost:11434/api/embeddings",
+                },
+            },
+        )
+
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
-            process=Process.sequential,
+            process=Process.hierarchical,
+            manager_agent=stock_picker_manager,
             verbose=True,
             memory=True,
             embedder={
