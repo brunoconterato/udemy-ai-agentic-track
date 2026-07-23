@@ -22,15 +22,15 @@
     {
       "name": "desenvolver_testes_unitatiros__task",
       "description": "Desenvolver os testes unitários para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Código Python de testes utilizando Pytest para o módulo: {modulo}",
+      "expected_output": "Um arquivo de código Python (extensão .py) de testes utilizando Pytest para o módulo: {modulo}",
       "agent": "engenheiro_de_testes",
       "context": ["interpretar_os_requisitos__task"]
     },
 
     {
       "name": "desenvolver_frontend__task",
-      "description": "Desenvolver o frontend para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Código Python de frontend usando TKinter para o módulo: {modulo}",
+      "description": "Desenvolver o frontend via saídas estruturadas e organizadas de terminal para testar as funcionalidades principais do módulo: {modulo}.",
+      "expected_output": "Um arquivo de código Python (extensão .py) de frontend, usando saídas estruturadas de terminal, para o módulo: {modulo}",
       "agent": "engenheiro_de_frontend",
       "context": ["interpretar_os_requisitos__task"]
     },
@@ -38,7 +38,7 @@
     {
       "name": "desenvolver_backend__task",
       "description": "Desenvolver o backend para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Código Python de backend usando preferencialmente funções nativas do Python para o módulo: {modulo}",
+      "expected_output": "Um arquivo de código Python (extensão .py) de backend usando preferencialmente funções nativas do Python para o módulo: {modulo}",
       "agent": "engenheiro_de_backend",
       "context": ["interpretar_os_requisitos__task"]
     }
@@ -62,7 +62,7 @@
   // "planning_llm": "openai/gpt-4o",
 
   // LLM for the manager agent (required when process is "hierarchical")
-  // "manager_llm": "openai/gpt-4o",
+  "manager_llm": "ollama/batiai/gemma4-e2b:q4",
 
   // Crew-level LLM fields also accept object form for custom endpoints
   // "chat_llm": {"model": "llama3", "provider": "ollama", "base_url": "http://localhost:11434"},
