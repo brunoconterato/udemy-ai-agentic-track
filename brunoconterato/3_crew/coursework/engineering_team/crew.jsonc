@@ -3,16 +3,15 @@
   "name": "engineering_team",
 
   // Agents to include — each must have a matching agents/<name>.jsonc file
-  "agents": ["lider_de_engenharia", "engenheiro_de_software", "engenheiro_de_testes", "engenheiro_de_backend", "engenheiro_de_frontend"],
+  "agents": [
+    "engenheiro_de_software",
+    "engenheiro_de_testes",
+    "engenheiro_de_backend",
+    "engenheiro_de_frontend"
+  ],
 
   // Task definitions — executed in order for sequential process
   "tasks": [
-    // {
-    //   "name": "coordenar_o_desenvolvimento_de_software",
-    //   "description": "Coordenar a equipe de engenharia para desenvolvimento do módulo: {modulo}\n",
-    //   "expected_output": "Chamar",
-    //   "agent": "lider_de_engenharia"
-    // },
     {
       "name": "interpretar_os_requisitos__task",
       "description": "Fazer design para o módulo: {modulo}\nInterpretar os requisitos:\n{requisitos}\nProduzir design detalhado do módulo Python, cuja classe é {classe}.",
@@ -21,26 +20,28 @@
     },
 
     {
-      "name": "desenvolver_testes_unitatios__task",
-      "description": "Desenvolver o backend do módulo: {modulo}.",
-      "expected_output": "",
-      "agent": ""
+      "name": "desenvolver_testes_unitatiros__task",
+      "description": "Desenvolver os testes unitários para testar as funcionalidades principais do módulo: {modulo}.",
+      "expected_output": "Código Python de testes utilizando Pytest para o módulo: {modulo}",
+      "agent": "engenheiro_de_testes",
+      "context": ["interpretar_os_requisitos__task"]
     },
 
     {
       "name": "desenvolver_frontend__task",
-      "description": "",
-      "expected_output": "",
-      "agent": ""
+      "description": "Desenvolver o frontend para testar as funcionalidades principais do módulo: {modulo}.",
+      "expected_output": "Código Python de frontend usando TKinter para o módulo: {modulo}",
+      "agent": "engenheiro_de_frontend",
+      "context": ["interpretar_os_requisitos__task"]
     },
 
     {
       "name": "desenvolver_backend__task",
-      "description": "",
-      "expected_output": "",
-      "agent": ""
+      "description": "Desenvolver o backend para testar as funcionalidades principais do módulo: {modulo}.",
+      "expected_output": "Código Python de backend usando preferencialmente funções nativas do Python para o módulo: {modulo}",
+      "agent": "engenheiro_de_backend",
+      "context": ["interpretar_os_requisitos__task"]
     }
-
   ],
 
   // Execution process
@@ -87,5 +88,9 @@
   // Use {placeholder} in agent or task text, for example:
   // "description": "Research {topic} and write a brief"
   // `crewai run` prompts for any placeholders missing from this object.
-  "inputs": {}
+  "inputs": {
+    "modulo": "Torre de Hanoi",
+    "requisitos": "Deve ser jogável",
+    "classe": "HanoiTower"
+  }
 }
