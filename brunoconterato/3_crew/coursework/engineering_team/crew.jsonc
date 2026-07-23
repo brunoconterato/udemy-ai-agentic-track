@@ -21,26 +21,26 @@
 
     {
       "name": "desenvolver_testes_unitatiros__task",
-      "description": "Desenvolver os testes unitários para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Um arquivo de código Python (extensão .py) de testes utilizando Pytest para o módulo: {modulo}",
+      "description": "Desenvolver os testes unitários para testar as funcionalidades principais do módulo: {modulo}. Use o design produzido anteriormente. Grave o código completo usando a ferramenta custom:write_sandbox_file, com module_name igual a {modulo} e filename igual a test_solution.py. Como o backend ainda não existe nesta etapa TDD, não tente executar os testes agora.",
+      "expected_output": "Código Python de testes utilizando unittest para o módulo {modulo}, gravado em sandbox/<modulo_normalizado>/test_solution.py.",
       "agent": "engenheiro_de_testes",
       "context": ["interpretar_os_requisitos__task"]
     },
 
     {
-      "name": "desenvolver_frontend__task",
-      "description": "Desenvolver o frontend via saídas estruturadas e organizadas de terminal para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Um arquivo de código Python (extensão .py) de frontend, usando saídas estruturadas de terminal, para o módulo: {modulo}",
-      "agent": "engenheiro_de_frontend",
-      "context": ["interpretar_os_requisitos__task"]
+      "name": "desenvolver_backend__task",
+      "description": "Desenvolver o backend para o módulo: {modulo}, seguindo o design e os testes unitários criados anteriormente. Use a ferramenta custom:write_sandbox_file para gravar o código completo em sandbox/<modulo_normalizado>/solution.py, usando module_name igual a {modulo} e filename igual a solution.py. Depois de gravar o backend, use custom:run_sandbox_python_file com filename test_solution.py e filetype test para executar os testes.",
+      "expected_output": "Código Python de backend gravado em sandbox/<modulo_normalizado>/solution.py, com os testes unitários executados após a gravação.",
+      "agent": "engenheiro_de_backend",
+      "context": ["interpretar_os_requisitos__task", "desenvolver_testes_unitatiros__task"]
     },
 
     {
-      "name": "desenvolver_backend__task",
-      "description": "Desenvolver o backend para testar as funcionalidades principais do módulo: {modulo}.",
-      "expected_output": "Um arquivo de código Python (extensão .py) de backend usando preferencialmente funções nativas do Python para o módulo: {modulo}",
-      "agent": "engenheiro_de_backend",
-      "context": ["interpretar_os_requisitos__task"]
+      "name": "desenvolver_frontend__task",
+      "description": "Desenvolver o frontend para demonstrar as funcionalidades principais do módulo: {modulo}, lendo o backend já gravado. Use a ferramenta custom:write_sandbox_file para gravar o código completo em sandbox/<modulo_normalizado>/app.py, usando module_name igual a {modulo} e filename igual a app.py. O frontend deve importar solution.py e usar Tkinter.",
+      "expected_output": "Código Python de frontend usando Tkinter, gravado em sandbox/<modulo_normalizado>/app.py e importando solution.py.",
+      "agent": "engenheiro_de_frontend",
+      "context": ["desenvolver_backend__task"]
     }
   ],
 
