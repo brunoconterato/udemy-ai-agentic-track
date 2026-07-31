@@ -7,7 +7,8 @@
     "engenheiro_de_software",
     "engenheiro_de_testes",
     "engenheiro_de_backend",
-    "engenheiro_de_frontend"
+    "engenheiro_de_frontend",
+    "executor_de_codigo"
   ],
 
   // Task definitions — executed in order for sequential process
@@ -41,6 +42,14 @@
       "expected_output": "Código Python de frontend usando Tkinter, gravado em sandbox/<modulo_normalizado>/app.py e importando solution.py.",
       "agent": "engenheiro_de_frontend",
       "context": ["desenvolver_backend__task"]
+    },
+
+    {
+      "name": "executar_codigo__task",
+      "description": "Delegar obrigatoriamente ao Executor de Código a execução de um arquivo Python do módulo {modulo} e retornar integralmente o output recebido. Execute um arquivo de console que produza output, como solution.py, usando module_name igual a {modulo}, filename igual ao arquivo escolhido e filetype run. Não execute app.py se ele exigir interface gráfica ou puder bloquear sem produzir output.",
+      "expected_output": "Output completo da execução do arquivo Python, incluindo código de saída, stdout e stderr.",
+      "agent": "executor_de_codigo",
+      "context": ["desenvolver_frontend__task"]
     }
   ],
 
