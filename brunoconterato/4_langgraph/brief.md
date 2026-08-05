@@ -146,3 +146,71 @@ e LangSmith ajuda a observar o que aconteceu durante a execução.
 
 Juntos, eles formam um ambiente para criar aplicações de IA mais estruturadas,
 testáveis e fáceis de acompanhar.
+
+## LangChain Core na prática
+
+O `langchain-core` é a caixa de ferramentas básica do ecossistema. Ele não cria
+um agente completo sozinho: oferece peças pequenas e combináveis para você
+montar o comportamento que precisa.
+
+```text
+modelo  →  mensagens  →  ferramentas  →  loop  →  saída estruturada
+```
+
+### As cinco peças essenciais
+
+1. **Modelos** — uma interface comum para conversar com diferentes LLMs. O
+   método `invoke` executa uma chamada; `stream` entrega a resposta aos poucos.
+
+   ```python
+   resposta = llm.invoke("Explique agentes autônomos em uma frase")
+
+   for parte in llm.stream("Escreva um poema de duas linhas"):
+       print(parte.content, end="")
+   ```
+
+2. **Mensagens** — objetos tipados, como `SystemMessage`, `HumanMessage` e
+   `AIMessage`, substituem listas soltas de dicionários. Isso deixa claro quem
+   enviou cada mensagem e facilita estruturar o histórico da conversa.
+
+   ```python
+   mensagens = [
+       SystemMessage("Responda em cinco palavras"),
+       HumanMessage("Qual é a capital da França?"),
+   ]
+   resposta = llm.invoke(mensagens)
+   ```
+
+3. **Tools** — funções que o modelo pode chamar para obter dados ou executar
+   ações. Com `@tool`, a documentação e as dicas de tipo da função ajudam a
+   formar automaticamente o esquema que será apresentado ao modelo.
+
+   ```python
+   @tool
+   def get_share_price(symbol: str) -> float:
+       """Retorna o preço atual de uma ação."""
+       return {"AAPL": 210.0, "MSFT": 480.0}[symbol]
+   ```
+
+4. **Loop** — na camada Core, o ciclo do agente é montado manualmente:
+
+   ```text
+   bind_tools → invoke → ler tool_calls → executar tools
+       ↑                                      ↓
+       └──────────── enviar ToolMessage ─────┘
+   ```
+
+   O modelo decide quando precisa de uma ferramenta; o programa executa a
+   função, devolve o resultado em um `ToolMessage` e chama o modelo novamente.
+   O ciclo termina quando não há mais `tool_calls`.
+
+5. **Saída estruturada** — quando a resposta precisa seguir um formato exato,
+   `with_structured_output` permite declarar um schema, por exemplo um modelo
+   Pydantic, e receber um objeto em vez de texto livre.
+
+### Ideia para memorizar
+
+`langchain-core` fornece os componentes; o desenvolvedor decide como conectá-
+los. Por isso, é a camada que oferece mais controle — e também exige que você
+implemente o loop, o estado e o tratamento das ferramentas. O LangGraph entra
+depois para organizar esse fluxo em um grafo mais confiável.
