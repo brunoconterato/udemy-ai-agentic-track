@@ -18,57 +18,30 @@ Identifiquei sete pontos relevantes que precisavam de correção ou maior detalh
 | Não explicava adequadamente o retorno após `Command(resume)`                    | Demonstrar que a retomada pode produzir outra interrupção, e não necessariamente uma resposta final     |
 | Não delimitava erros e efeitos colaterais                                       | Incluir validação de edição, proteção contra novas mensagens durante uma revisão e cuidados com retries |
 
-Há ainda uma distinção importante: no modo `per_call` atual, o HITL intercepta cada chamada protegida dentro da cadeia de middleware das tools, enquanto no modo padrão `batched` a revisão é agrupada após a resposta do modelo.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+Há ainda uma distinção importante: no modo `per_call` atual, o HITL intercepta cada chamada protegida dentro da cadeia de middleware das tools, enquanto no modo padrão `batched` a revisão é agrupada após a resposta do modelo.
 
 ## 2. Mapa completo da arquitetura
 
-Gradio — Interface
-
-Textbox · Chatbot · Buttons · gr.State
-
-Callbacks → agent.invoke()
-
-create_agent
-
-Orquestra o grafo de execução
-
-Model
-
-Raciocínio e tool calls
-
-Middleware
-
-Hooks, controle e HITL
-
-AgentState
-
-Mensagens e estado
-
-Tools
-
-Funções executáveis
-
-Checkpointer
-
-Estado por thread_id
-
-Store
-
-Memória entre threads
-
-ToolRuntime
-
-Conecta tools ao State, Context, Store e Config
-
-Interrupt ↔ Command(resume)
-
-Human-in-the-Loop
-
-Revisão humana: approve · edit · reject · respond
+```text
+Usuário
+   │ mensagem / decisão
+   ▼
+Gradio (interface, callbacks e gr.State)
+   │ agent.invoke(...) / Command(resume=...)
+   ▼
+create_agent — grafo executado pelo LangGraph
+   │
+   ├── Modelo ◄──── mensagens e resultados das tools
+   │     │ tool calls
+   │     ▼
+   ├── Middleware ── HITL ── interrupt ──► Gradio
+   │     │                ◄── decisão humana
+   │     ▼
+   ├── Tools ── ToolRuntime ──► State, Context, Store e Config
+   │
+   ├── AgentState ◄── Checkpointer (estado por thread)
+   └── Store (dados compartilhados entre threads)
+```
 
 ### As quatro operações fundamentais
 
@@ -87,7 +60,7 @@ Esse mesmo raciocínio será aplicado ao middleware, à memória e ao Gradio.
 
 Usando `uv`:
 
-```
+```bash
 uv init agente-estudo
 cd agente-estudo
 
@@ -96,13 +69,13 @@ uv add "langchain>=1.4.6" langgraph langchain-openai gradio
 
 Configure sua chave de API:
 
-```
+```bash
 export OPENAI_API_KEY="sua-chave"
 ```
 
 Nos exemplos, utilizaremos:
 
-```
+```python
 MODEL = "openai:gpt-5.5"
 ```
 
@@ -112,19 +85,27 @@ O modelo deve suportar tool calling. A escolha de modelo é independente da impl
 
 O `create_agent` constrói um agente sobre LangGraph.
 
-```
-from langchain.agents import create_agentagent = create_agent(    model=MODEL,    tools=[],)
+```python
+from langchain.agents import create_agent
+agent = create_agent(
+    model=MODEL,
+    tools=[],
+)
 ```
 
 Para executar:
 
-```
-result = agent.invoke({    "messages": [        {"role": "user", "content": "Olá"}    ]})print(result["messages"][-1].content)
+```python
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "Olá"}
+    ]})
+print(result["messages"][-1].content)
 ```
 
 ### Quem executa o quê?
 
-```
+```text
 Seu código
     │
     └── agent.invoke(...)
@@ -148,33 +129,47 @@ Não precisa escrever um loop `while` para executar tool calls.
 
 ### 5.1. Definição
 
-```
-from langchain.tools import tool@tooldef somar(a: float, b: float) -> float:    """Soma dois números."""    return a + b
+```python
+from langchain.tools import tool
+
+@tool
+def somar(a: float, b: float) -> float:
+    """Soma dois números."""
+    return a + b
 ```
 
 ### 5.2. Registro
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+)
 ```
 
 ### 5.3. Acionamento
 
-```
-result = agent.invoke({    "messages": [        {"role": "user", "content": "Some 20 e 30."}    ]})
+```python
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "Some 20 e 30."}
+    ]})
 ```
 
 Se o modelo solicitar:
 
-```
-{    "name": "somar",    "args": {"a": 20, "b": 30},}
+```python
+{
+    "name": "somar",
+    "args": {"a": 20, "b": 30},
+}
 ```
 
 o runtime executa `somar(a=20, b=30)`, cria o `ToolMessage` com o resultado e devolve a informação ao modelo.
 
 Não é necessário:
 
-```
+```python
 somar.invoke(...)
 ```
 
@@ -182,7 +177,7 @@ após a resposta do modelo.
 
 ### 5.4. Estrutura das mensagens
 
-```
+```text
 HumanMessage
     "Some 20 e 30"
 
@@ -214,52 +209,80 @@ Esses conceitos devem ser separados.
 
 Definição:
 
-```
-from langgraph.checkpoint.memory import InMemorySavercheckpointer = InMemorySaver()
+```python
+from langgraph.checkpoint.memory import InMemorySaver
+checkpointer = InMemorySaver()
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    checkpointer=checkpointer,)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    checkpointer=checkpointer,
+)
 ```
 
 Identificação da conversa:
 
-```
-config = {    "configurable": {        "thread_id": "conversa-123"    }}
+```python
+config = {
+    "configurable": {
+        "thread_id": "conversa-123"
+    }}
 ```
 
 Execução:
 
+```python
+agent.invoke(
+    {"messages": [
+        {"role": "user", "content": "Meu nome é Bruno."}
+    ]},
+    config=config,
+)
+result = agent.invoke(
+    {"messages": [
+        {"role": "user", "content": "Qual é meu nome?"}
+    ]},
+    config=config,
+)
 ```
-agent.invoke(    {"messages": [        {"role": "user", "content": "Meu nome é Bruno."}    ]},    config=config,)result = agent.invoke(    {"messages": [        {"role": "user", "content": "Qual é meu nome?"}    ]},    config=config,)
-```
 
-A segunda chamada recupera o histórico da mesma thread. O estado é atualizado durante o fluxo, inclusive quando tools são executadas.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+A segunda chamada recupera o histórico da mesma thread. O estado é atualizado durante o fluxo, inclusive quando tools são executadas.
 
 ### 6.2. `Context`: informações da execução
 
 Definição:
 
-```
-from dataclasses import dataclass@dataclassclass Context:    user_id: str
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Context:
+    user_id: str
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    context_schema=Context,)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    context_schema=Context,
+)
 ```
 
 Fornecimento:
 
-```
-agent.invoke(    {"messages": [        {"role": "user", "content": "Olá"}    ]},    context=Context(user_id="usuario-123"),)
+```python
+agent.invoke(
+    {"messages": [
+        {"role": "user", "content": "Olá"}
+    ]},
+    context=Context(user_id="usuario-123"),
+)
 ```
 
 O `Context` é particularmente útil para dados como identificadores de usuários, permissões e configurações da invocação.
@@ -268,14 +291,20 @@ O `Context` é particularmente útil para dados como identificadores de usuário
 
 Definição:
 
-```
-from langgraph.store.memory import InMemoryStorestore = InMemoryStore()
+```python
+from langgraph.store.memory import InMemoryStore
+store = InMemoryStore()
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    store=store,    context_schema=Context,)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    store=store,
+    context_schema=Context,
+)
 ```
 
 O `Store` armazena informações entre threads. Ao contrário do `Checkpointer`, ele não representa necessariamente o histórico completo de uma conversa.
@@ -284,34 +313,71 @@ O `Store` armazena informações entre threads. Ao contrário do `Checkpointer`,
 
 O `ToolRuntime` é um objeto que o LangChain injeta na função.
 
-```
-from langchain.tools import tool, ToolRuntime@tooldef contar_mensagens(runtime: ToolRuntime) -> int:    """Conta mensagens da conversa."""    return len(runtime.state["messages"])
+```python
+from langchain.tools import tool, ToolRuntime
+
+@tool
+def contar_mensagens(runtime: ToolRuntime) -> int:
+    """Conta mensagens da conversa."""
+    return len(runtime.state["messages"])
 ```
 
 O modelo não precisa preencher `runtime`.
 
-Além de `runtime.state`, uma tool pode utilizar `runtime.context`, `runtime.store`, `runtime.config` e `runtime.tool_call_id`.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+Além de `runtime.state`, uma tool pode utilizar `runtime.context`, `runtime.store`, `runtime.config` e `runtime.tool_call_id`.
 
 ### 6.5. Tools acessando memória longa
 
-```
-@tooldef salvar_preferencia(    chave: str,    valor: str,    runtime: ToolRuntime[Context],) -> str:    """Salva uma preferência do usuário."""    user_id = runtime.context.user_id    runtime.store.put(        ("usuarios", user_id),        chave,        {"valor": valor},    )    return "Preferência salva."@tooldef consultar_preferencia(    chave: str,    runtime: ToolRuntime[Context],) -> str:    """Consulta uma preferência do usuário."""    user_id = runtime.context.user_id    item = runtime.store.get(        ("usuarios", user_id),        chave,    )    return item.value["valor"] if item else "Não encontrada."
+```python
+@tool
+def salvar_preferencia(
+    chave: str,
+    valor: str,
+    runtime: ToolRuntime[Context],) -> str:
+    """Salva uma preferência do usuário."""
+    user_id = runtime.context.user_id
+    runtime.store.put(
+        ("usuarios", user_id),
+        chave,
+        {"valor": valor},
+    )
+    return "Preferência salva."@tool
+def consultar_preferencia(
+    chave: str,
+    runtime: ToolRuntime[Context],) -> str:
+    """Consulta uma preferência do usuário."""
+    user_id = runtime.context.user_id
+    item = runtime.store.get(
+        ("usuarios", user_id),
+        chave,
+    )
+    return item.value["valor"] if item else "Não encontrada."
 ```
 
 Conexão no agente:
 
-```
-agent = create_agent(    model=MODEL,    tools=[        salvar_preferencia,        consultar_preferencia,    ],    store=store,    context_schema=Context,)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[
+        salvar_preferencia,
+        consultar_preferencia,
+    ],
+    store=store,
+    context_schema=Context,
+)
 ```
 
 Acionamento:
 
-```
-agent.invoke(    {"messages": [{        "role": "user",        "content": "Guarde que prefiro respostas curtas."    }]},    context=Context(user_id="usuario-123"),)
+```python
+agent.invoke(
+    {"messages": [{
+        "role": "user",
+        "content": "Guarde que prefiro respostas curtas."
+    }]},
+    context=Context(user_id="usuario-123"),
+)
 ```
 
 O modelo precisa decidir chamar a tool. A mera presença de `store=store` não produz memória longa automaticamente.
@@ -329,62 +395,105 @@ Os hooks principais são:
 | `wrap_tool_call`  | Ao redor da tool        | Logging/retry/HITL |
 | `after_agent`     | Finalização             | Pós-processamento  |
 
-Os hooks de nó e os hooks de wrapper possuem comportamentos diferentes. Os primeiros executam em pontos específicos; os segundos envolvem a execução e recebem um `handler`.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+Os hooks de nó e os hooks de wrapper possuem comportamentos diferentes. Os primeiros executam em pontos específicos; os segundos envolvem a execução e recebem um `handler`.
 
 ### 7.1. Middleware que observa o estado
 
-```
-from langchain.agents import AgentStatefrom langchain.agents.middleware import before_modelfrom langgraph.runtime import Runtime@before_modeldef log_model(state: AgentState, runtime: Runtime):    print("Mensagens:", len(state["messages"]))    return None
+```python
+from langchain.agents import AgentState
+from langchain.agents.middleware import before_model
+from langgraph.runtime import Runtime
+
+@before_model
+def log_model(state: AgentState, runtime: Runtime):
+    print("Mensagens:", len(state["messages"]))
+    return None
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    middleware=[log_model],)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    middleware=[log_model],
+)
 ```
 
 ### 7.2. Middleware que envolve tools
 
-```
-from langchain.agents.middleware import wrap_tool_call@wrap_tool_calldef log_tool(request, handler):    print("Início:", request.tool_call["name"])    result = handler(request)    print("Fim da tool")    return result
+```python
+from langchain.agents.middleware import wrap_tool_call
+
+@wrap_tool_call
+def log_tool(request, handler):
+    print("Início:", request.tool_call["name"])
+    result = handler(request)
+    print("Fim da tool")
+    return result
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    middleware=[log_model, log_tool],)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    middleware=[log_model, log_tool],
+)
 ```
 
 O `handler(request)` continua a cadeia de execução. Ele pode passar por outros middlewares antes de chegar à tool.
 
 ### 7.3. Middleware que envolve o modelo
 
-```
-from langchain.agents.middleware import wrap_model_call@wrap_model_calldef log_model_call(request, handler):    print("Chamando o LLM")    response = handler(request)    print("LLM respondeu")    return response
+```python
+from langchain.agents.middleware import wrap_model_call
+
+@wrap_model_call
+def log_model_call(request, handler):
+    print("Chamando o LLM")
+    response = handler(request)
+    print("LLM respondeu")
+    return response
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    middleware=[        log_model,        log_model_call,        log_tool,    ],)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    middleware=[
+        log_model,
+        log_model_call,
+        log_tool,
+    ],
+)
 ```
 
 ### 7.4. Middlewares predefinidos
 
 Por exemplo, resumir histórico para controlar o tamanho do contexto:
 
-```
-from langchain.agents.middleware import SummarizationMiddlewaresummary = SummarizationMiddleware(    model="openai:gpt-5.4-mini",    trigger=("tokens", 4000),    keep=("messages", 20),)
+```python
+from langchain.agents.middleware import SummarizationMiddleware
+summary = SummarizationMiddleware(
+    model="openai:gpt-5.4-mini",
+    trigger=("tokens", 4000),
+    keep=("messages", 20),
+)
 ```
 
 Registro:
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar],    middleware=[summary, log_tool],    checkpointer=checkpointer,)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar],
+    middleware=[summary, log_tool],
+    checkpointer=checkpointer,
+)
 ```
 
 Existem também middlewares de retry, tratamento de erros, proteção de dados e limites de execução.
@@ -393,59 +502,113 @@ Existem também middlewares de retry, tratamento de erros, proteção de dados e
 
 ### 8.1. Definição da ferramenta sensível
 
-```
-@tooldef transferir(destino: str, valor: float) -> str:    """Simula uma transferência financeira."""    return f"Transferidos R$ {valor:.2f} para {destino}"
+```python
+@tool
+def transferir(destino: str, valor: float) -> str:
+    """Simula uma transferência financeira."""
+    return f"Transferidos R$ {valor:.2f} para {destino}"
 ```
 
 ### 8.2. Definição da política
 
-```
-from langchain.agents.middleware import HumanInTheLoopMiddlewarehitl = HumanInTheLoopMiddleware(    interrupt_on={        "transferir": {            "allowed_decisions": ["approve", "edit", "reject"]        },        "somar": False,    },    interrupt_mode="per_call",)
+```python
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+hitl = HumanInTheLoopMiddleware(
+    interrupt_on={
+        "transferir": {
+            "allowed_decisions": ["approve", "edit", "reject"]
+        },
+        "somar": False,
+    },
+    interrupt_mode="per_call",
+)
 ```
 
 ### 8.3. Registro
 
-```
-agent = create_agent(    model=MODEL,    tools=[somar, transferir],    middleware=[hitl],    checkpointer=InMemorySaver(),)
+```python
+agent = create_agent(
+    model=MODEL,
+    tools=[somar, transferir],
+    middleware=[hitl],
+    checkpointer=InMemorySaver(),
+)
 ```
 
 ### 8.4. Invocação que pode produzir interrupção
 
-```
-config = {    "configurable": {        "thread_id": "conversa-123"    }}result = agent.invoke(    {"messages": [{        "role": "user",        "content": "Transfira R$ 500 para João."    }]},    config=config,    version="v2",)
+```python
+config = {
+    "configurable": {
+        "thread_id": "conversa-123"
+    }}
+result = agent.invoke(
+    {"messages": [{
+        "role": "user",
+        "content": "Transfira R$ 500 para João."
+    }]},
+    config=config,
+    version="v2",
+)
 ```
 
 Ponto importante: `result.interrupts` só existirá com uma interrupção pendente se o modelo realmente propuser uma tool protegida.
 
-```
-if result.interrupts:    interrupt = result.interrupts[0]    print(interrupt.id)    print(interrupt.value)
+```python
+if result.interrupts:
+    interrupt = result.interrupts[0]
+    print(interrupt.id)
+    print(interrupt.value)
 ```
 
 O interrupt fornece a identificação e os argumentos da chamada proposta. Ele não executa a tool.
 
 ### 8.5. Decisões possíveis
 
+```python
+approve = {"type": "approve"}
+reject = {
+    "type": "reject",
+    "message": "Operação não autorizada.",
+}
+edit = {
+    "type": "edit",
+    "edited_action": {
+        "name": "transferir",
+        "args": {
+            "destino": "João",
+            "valor": 200,
+        },
+    },
+}
+respond = {
+    "type": "respond",
+    "message": "Resposta fornecida pelo humano.",
+}
 ```
-approve = {"type": "approve"}reject = {    "type": "reject",    "message": "Operação não autorizada.",}edit = {    "type": "edit",    "edited_action": {        "name": "transferir",        "args": {            "destino": "João",            "valor": 200,        },    },}respond = {    "type": "respond",    "message": "Resposta fornecida pelo humano.",}
-```
 
-`respond` é indicado para ferramentas do tipo `ask_user`, quando o humano substitui a resposta da própria ferramenta. Para negar uma operação, use `reject`.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+`respond` é indicado para ferramentas do tipo `ask_user`, quando o humano substitui a resposta da própria ferramenta. Para negar uma operação, use `reject`.
 
 ### 8.6. Retomada
 
-```
-from langgraph.types import Commandresult = agent.invoke(    Command(        resume={            interrupt.id: approve        }    ),    config=config,    version="v2",)
+```python
+from langgraph.types import Command
+result = agent.invoke(
+    Command(
+        resume={
+            interrupt.id: approve
+        }
+    ),
+    config=config,
+    version="v2",
+)
 ```
 
 O mesmo `thread_id` identifica a execução suspensa.
 
 ### 8.7. Fluxo com retorno ao frontend
 
-```
+```text
 Usuário pede transferência
           ↓
 Gradio chama agent.invoke()
@@ -500,19 +663,25 @@ O Gradio não detecta automaticamente o HITL. É o callback Python que interpret
 
 Considere:
 
-```
-def somar_interface(a, b):    resultado = a + b    return resultado
+```python
+def somar_interface(a, b):
+    resultado = a + b
+    return resultado
 ```
 
 E:
 
-```
-button.click(    fn=somar_interface,    inputs=[input_a, input_b],    outputs=[resultado_textbox],)
+```python
+button.click(
+    fn=somar_interface,
+    inputs=[input_a, input_b],
+    outputs=[resultado_textbox],
+)
 ```
 
 Mapeamento:
 
-```
+```text
 inputs[0] ──→ parâmetro a
 inputs[1] ──→ parâmetro b
 
@@ -523,31 +692,58 @@ return ─────→ resultado_textbox
 
 Para múltiplos retornos:
 
-```
-def atualizar():    return "Texto", gr.update(visible=True)
+```python
+def atualizar():
+    return "Texto", gr.update(visible=True)
 ```
 
-```
-button.click(    fn=atualizar,    inputs=[],    outputs=[status, painel],)
+```python
+button.click(
+    fn=atualizar,
+    inputs=[],
+    outputs=[status, painel],
+)
 ```
 
 A primeira saída atualiza o conteúdo de `status`. A segunda altera a visibilidade de `painel`.
 
-É exatamente assim que o HITL será apresentado ao usuário. A documentação do Gradio especifica que os argumentos da função correspondem aos componentes em `inputs`, e os valores retornados correspondem aos componentes em `outputs`.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://gradio.app&sz=32)
-
-Gradio+2
+É exatamente assim que o HITL será apresentado ao usuário. A documentação do Gradio especifica que os argumentos da função correspondem aos componentes em `inputs`, e os valores retornados correspondem aos componentes em `outputs`.
 
 ### 9.3. Definir os componentes da interface
 
-```
-import gradio as grimport uuidwith gr.Blocks() as demo:    thread_id = gr.State(        lambda: str(uuid.uuid4())    )    pending = gr.State([])    chatbot = gr.Chatbot(        type="messages"    )    message = gr.Textbox(        label="Mensagem"    )    with gr.Group(visible=False) as review_panel:        review_info = gr.Markdown()        edited_args = gr.Code(            label="Argumentos JSON",            language="json",            interactive=True,        )        reject_reason = gr.Textbox(            label="Motivo da rejeição"        )        approve_btn = gr.Button("Aprovar")        edit_btn = gr.Button("Editar e aprovar")        reject_btn = gr.Button("Rejeitar")
+```python
+import gradio as gr
+import uuid
+
+with gr.Blocks() as demo:
+    thread_id = gr.State(
+        lambda: str(uuid.uuid4())
+    )
+    pending = gr.State([])
+    chatbot = gr.Chatbot(
+        type="messages"
+    )
+    message = gr.Textbox(
+        label="Mensagem"
+    )
+    with gr.Group(visible=False) as review_panel:
+        review_info = gr.Markdown()
+        edited_args = gr.Code(
+            label="Argumentos JSON",
+            language="json",
+            interactive=True,
+        )
+        reject_reason = gr.Textbox(
+            label="Motivo da rejeição"
+        )
+        approve_btn = gr.Button("Aprovar")
+        edit_btn = gr.Button("Editar e aprovar")
+        reject_btn = gr.Button("Rejeitar")
 ```
 
 Inicialmente:
 
-```
+```python
 gr.Group(visible=False)
 ```
 
@@ -555,7 +751,7 @@ significa que o painel de revisão está oculto.
 
 Ele aparecerá quando o callback retornar:
 
-```
+```python
 gr.update(visible=True)
 ```
 
@@ -565,30 +761,136 @@ para o componente `review_panel`.
 
 Esta função é a ligação entre LangGraph e Gradio.
 
-```
-import jsondef process_result(result, history):    interrupts = list(result.interrupts)    if interrupts:        pending = [            {                "id": item.id,                "value": item.value,            }            for item in interrupts        ]        current = pending[0]        action = current["value"]        review_text = (            f"### Aprovação necessária\n\n"            f"**Tool:** `{action['name']}`\n\n"            f"**Interrupções pendentes:** {len(pending)}"        )        edited_json = json.dumps(            action["args"],            indent=2,            ensure_ascii=False,        )        return (            history,                     # Chatbot            pending,                     # gr.State            review_text,                 # Markdown            edited_json,                 # Code            gr.update(visible=True),     # Group        )    # Sem interrupções: execução terminou    answer = result.value["messages"][-1].content    history = history + [{        "role": "assistant",        "content": str(answer),    }]    return (        history,        [],        "",        "",        gr.update(visible=False),    )
+```python
+import json
+
+def process_result(result, history):
+    interrupts = list(result.interrupts)
+    if interrupts:
+        pending = [
+            {
+                "id": item.id,
+                "value": item.value,
+            }
+            for item in interrupts
+        ]
+        current = pending[0]
+        action = current["value"]
+        review_text = (
+            f"### Aprovação necessária\n\n"
+            f"**Tool:** `{action['name']}`\n\n"
+            f"**Interrupções pendentes:** {len(pending)}"
+        )
+        edited_json = json.dumps(
+            action["args"],
+            indent=2,
+            ensure_ascii=False,
+        )
+        return (
+            history,  # Chatbot
+            pending,  # gr.State
+            review_text,  # Markdown
+            edited_json,  # Code
+            gr.update(visible=True),  # Group
+        )  # Sem interrupções: execução terminou
+    answer = result.value["messages"][-1].content
+    history = history + [{
+        "role": "assistant",
+        "content": str(answer),
+    }]
+    return (
+        history,
+        [],
+        "",
+        "",
+        gr.update(visible=False),
+    )
 ```
 
 O ponto que faltava no guia anterior é esta conexão:
 
-```
-result.interrupts        ↓process_result()        ↓gr.update(visible=True)        ↓review_panel aparece
+```text
+result.interrupts
+        ↓
+process_result()
+        ↓
+gr.update(visible=True)
+        ↓
+review_panel aparece
 ```
 
 Não existe uma chamada automática para `approve_btn.click()`. O middleware apenas produz a interrupção; o Gradio espera que o usuário clique.
 
 ### 9.5. Callback de envio
 
-```
-def send_message(message, history, thread_id, pending):    history = history or []    if pending:        raise gr.Error(            "Resolva a aprovação pendente antes de enviar outra mensagem."        )    if not message.strip():        return (            history, pending, message,            "", "", gr.update(visible=False)        )    config = {        "configurable": {            "thread_id": thread_id        }    }    result = agent.invoke(        {"messages": [            {"role": "user", "content": message}        ]},        config=config,        context=Context(user_id="usuario-demo"),        version="v2",    )    history = history + [{        "role": "user",        "content": message,    }]    (        history,        pending,        review_text,        edited_json,        panel_update,    ) = process_result(result, history)    return (        history,        pending,        "",              # Limpa campo de mensagem        review_text,        edited_json,        panel_update,    )
+```python
+def send_message(message, history, thread_id, pending):
+    history = history or []
+    if pending:
+        raise gr.Error(
+            "Resolva a aprovação pendente antes de enviar outra mensagem."
+        )
+    if not message.strip():
+        return (
+            history, pending, message,
+            "", "", gr.update(visible=False)
+        )
+    config = {
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }
+    result = agent.invoke(
+        {"messages": [
+            {"role": "user", "content": message}
+        ]},
+        config=config,
+        context=Context(user_id="usuario-demo"),
+        version="v2",
+    )
+    history = history + [{
+        "role": "user",
+        "content": message,
+    }]
+    (
+        history,
+        pending,
+        review_text,
+        edited_json,
+        panel_update,
+    ) = process_result(result, history)
+    return (
+        history,
+        pending,
+        "",  # Limpa campo de mensagem
+        review_text,
+        edited_json,
+        panel_update,
+    )
 ```
 
 O `agent.invoke()` termina ao produzir o interrupt. A função então devolve a informação para o Gradio.
 
 ### 9.6. Conectar o envio à interface
 
-```
-message.submit(    fn=send_message,    inputs=[        message,        chatbot,        thread_id,        pending,    ],    outputs=[        chatbot,        pending,        message,        review_info,        edited_args,        review_panel,    ],)
+```python
+message.submit(
+    fn=send_message,
+    inputs=[
+        message,
+        chatbot,
+        thread_id,
+        pending,
+    ],
+    outputs=[
+        chatbot,
+        pending,
+        message,
+        review_info,
+        edited_args,
+        review_panel,
+    ],
+)
 ```
 
 Mapeamento explícito:
@@ -608,13 +910,39 @@ As três decisões humanas possuem um comportamento comum: gerar um `Command`, c
 
 Podemos centralizar essa lógica:
 
-```
-from langgraph.types import Commanddef resume_agent(    decision,    history,    pending,    thread_id,):    if not pending:        raise gr.Error("Não há interrupção pendente.")    current = pending[0]    config = {        "configurable": {            "thread_id": thread_id        }    }    result = agent.invoke(        Command(            resume={                current["id"]: decision            }        ),        config=config,        context=Context(user_id="usuario-demo"),        version="v2",    )    return process_result(result, history)
+```python
+from langgraph.types import Command
+
+def resume_agent(
+    decision,
+    history,
+    pending,
+    thread_id,
+):
+    if not pending:
+        raise gr.Error("Não há interrupção pendente.")
+    current = pending[0]
+    config = {
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }
+    result = agent.invoke(
+        Command(
+            resume={
+                current["id"]: decision
+            }
+        ),
+        config=config,
+        context=Context(user_id="usuario-demo"),
+        version="v2",
+    )
+    return process_result(result, history)
 ```
 
 Essa função não chama nenhuma tool manualmente.
 
-```
+```text
 resume_agent()
      ↓
 Command(resume={interrupt_id: decision})
@@ -636,40 +964,147 @@ Gradio atualiza componentes
 
 ### 9.8. Botão Aprovar — callback completo
 
-```
-def approve_action(history, pending, thread_id):    decision = {        "type": "approve"    }    return resume_agent(        decision=decision,        history=history,        pending=pending,        thread_id=thread_id,    )
+```python
+def approve_action(history, pending, thread_id):
+    decision = {
+        "type": "approve"
+    }
+    return resume_agent(
+        decision=decision,
+        history=history,
+        pending=pending,
+        thread_id=thread_id,
+    )
 ```
 
 Conexão:
 
-```
-approve_btn.click(    fn=approve_action,    inputs=[        chatbot,        pending,        thread_id,    ],    outputs=[        chatbot,        pending,        review_info,        edited_args,        review_panel,    ],)
+```python
+approve_btn.click(
+    fn=approve_action,
+    inputs=[
+        chatbot,
+        pending,
+        thread_id,
+    ],
+    outputs=[
+        chatbot,
+        pending,
+        review_info,
+        edited_args,
+        review_panel,
+    ],
+)
 ```
 
 ### 9.9. Botão Rejeitar — callback completo
 
-```
-def reject_action(    history,    pending,    thread_id,    reason,):    decision = {        "type": "reject",        "message": (            reason.strip()            or "Operação não autorizada. Não repita a chamada."        ),    }    return resume_agent(        decision=decision,        history=history,        pending=pending,        thread_id=thread_id,    )
+```python
+def reject_action(
+    history,
+    pending,
+    thread_id,
+    reason,
+):
+    decision = {
+        "type": "reject",
+        "message": (
+            reason.strip()
+            or "Operação não autorizada. Não repita a chamada."
+        ),
+    }
+    return resume_agent(
+        decision=decision,
+        history=history,
+        pending=pending,
+        thread_id=thread_id,
+    )
 ```
 
 Conexão:
 
-```
-reject_btn.click(    fn=reject_action,    inputs=[        chatbot,        pending,        thread_id,        reject_reason,    ],    outputs=[        chatbot,        pending,        review_info,        edited_args,        review_panel,    ],)
+```python
+reject_btn.click(
+    fn=reject_action,
+    inputs=[
+        chatbot,
+        pending,
+        thread_id,
+        reject_reason,
+    ],
+    outputs=[
+        chatbot,
+        pending,
+        review_info,
+        edited_args,
+        review_panel,
+    ],
+)
 ```
 
 ### 9.10. Botão Editar — callback completo
 
-Aqui a validação acontece antes de retomar o agente.
+Aqui a validação acontece antes de retomar o agente. Este exemplo usa `import json` e `import math`.
 
-```
-def edit_action(    history,    pending,    thread_id,    edited_json,):    if not pending:        raise gr.Error("Não há interrupção pendente.")    current = pending[0]    original = current["value"]    try:        args = json.loads(edited_json)    except json.JSONDecodeError as exc:        raise gr.Error(f"JSON inválido: {exc}")    if not isinstance(args, dict):        raise gr.Error("Os argumentos precisam ser um objeto JSON.")    if original["name"] == "transferir":        if set(args) != {"destino", "valor"}:            raise gr.Error(                "Informe somente os campos destino e valor."            )        if not isinstance(args["destino"], str):            raise gr.Error("Destino inválido.")        if not args["destino"].strip():            raise gr.Error("Destino não pode ser vazio.")        try:            valor = float(args["valor"])
+```python
+def edit_action(
+    history,
+    pending,
+    thread_id,
+    edited_json,
+):
+    if not pending:
+        raise gr.Error("Não há interrupção pendente.")
+    current = pending[0]
+    original = current["value"]
+    try:
+        args = json.loads(edited_json)
+    except json.JSONDecodeError as exc:
+        raise gr.Error(f"JSON inválido: {exc}")
+    if not isinstance(args, dict):
+        raise gr.Error("Os argumentos precisam ser um objeto JSON.")
+    if original["name"] == "transferir":
+        if set(args) != {"destino", "valor"}:
+            raise gr.Error(
+                "Informe somente os campos destino e valor."
+            )
+        if not isinstance(args["destino"], str):
+            raise gr.Error("Destino inválido.")
+        if not args["destino"].strip():
+            raise gr.Error("Destino não pode ser vazio.")
+        try:
+            valor = float(args["valor"])
+        except (TypeError, ValueError):
+            raise gr.Error("Valor inválido.")
+        if not math.isfinite(valor) or valor <= 0:
+            raise gr.Error("O valor deve ser positivo e finito.")
+        args["valor"] = valor
+    decision = {
+        "type": "edit",
+        "edited_action": {"name": original["name"], "args": args},
+    }
+    return resume_agent(decision, history, pending, thread_id)
 ```
 
 Conexão:
 
-```
-edit_btn.click(    fn=edit_action,    inputs=[        chatbot,        pending,        thread_id,        edited_args,    ],    outputs=[        chatbot,        pending,        review_info,        edited_args,        review_panel,    ],)
+```python
+edit_btn.click(
+    fn=edit_action,
+    inputs=[
+        chatbot,
+        pending,
+        thread_id,
+        edited_args,
+    ],
+    outputs=[
+        chatbot,
+        pending,
+        review_info,
+        edited_args,
+        review_panel,
+    ],
+)
 ```
 
 Agora a interface possui três operações completas, independentes, mas reutilizando `resume_agent()`.
@@ -686,7 +1121,7 @@ Exemplo ilustrativo do que a interface construída acima exibirá
 
 Tool: `transferir`
 
-```
+```json
 {
   "destino": "João",
   "valor": 500
@@ -709,53 +1144,26 @@ Rejeitar
 
 Se houver novo interrupt, mantém o painel aberto. Caso contrário, exibe a resposta final e oculta o painel.
 
-# 10. Aplicação integrada e executável — `app.py`
+## 10. Integração dos componentes
 
-Agora reuniremos todos os conceitos em um único programa, sem funções omitidas, pseudocódigo ou objetos deixados como `...`.
+Os trechos da seção 9 mostram como conectar o agente à interface. O código original desta seção estava truncado e não continha uma aplicação completa; por isso, os exemplos acima devem ser usados como referência para montar a aplicação, não como um `app.py` pronto para executar.
 
-Inclui:
+A transferência é simulada. Para uma aplicação real, configure persistência, autenticação, isolamento por usuário e tratamento de erros adequados.
 
-- `create_agent` e tool calling automático;
-- tools comuns e tools com `ToolRuntime`;
-- `AgentState`, `Context`, memória curta e longa;
-- middlewares `before_model`, `wrap_model_call` e `wrap_tool_call`;
-- `HumanInTheLoopMiddleware` com `per_call`;
-- Gradio com chatbot, painel condicional, edição de JSON, aprovação e rejeição;
-- tratamento de múltiplas interrupções;
-- callbacks completos de envio e retomada.
-
-O exemplo de transferência é simulado: nenhuma movimentação financeira ocorre.
-
-## 10.1. Código completo
-
-```
-import jsonimport mathimport uuidfrom dataclasses import dataclassimport gradio as grfrom langchain.agents import AgentState, create_agentfrom langchain.agents.middleware import (    HumanInTheLoopMiddleware,    before_model,    wrap_model_call,    wrap_tool_call,)from langchain.tools import tool, ToolRuntimefrom langgraph.checkpoint.memory import InMemorySaverfrom langgraph.store.memory import InMemoryStorefrom langgraph.runtime import Runtimefrom langgraph.types import Commandfrom langchain_core.messages import AIMessage# ==========================================================# 1. CONFIGURAÇÕES# ==========================================================MODEL = "openai:gpt-5.5"@dataclassclass Context:    """Dados fornecidos a cada invocação do agente."""
-```
-
-Execute com:
-
-```
-uv run python app.py
-```
-
-O código foi construído de acordo com as assinaturas documentadas, mas não foi executado contra um modelo real nesta conversa. Isso significa que o comportamento de escolha de ferramentas pelo LLM e possíveis particularidades das versões instaladas precisam ser validados no seu ambiente.
-
-## 10.2. Mapa exato das conexões no código integrado
+### 10.1. Mapa das conexões
 
 | Conceito definido      | Ponto de conexão                           | Quem o executa                  |
 | ---------------------- | ------------------------------------------ | ------------------------------- |
 | `somar()`              | `tools=[somar, ...]`                       | Runtime de tools                |
 | `transferir()`         | `tools=[..., transferir]`                  | Runtime, depois da aprovação    |
 | `salvar_preferencia()` | `tools=[...]`                              | Runtime                         |
-| `log_before_model()`   | `middleware=[...]`                         | Runtime antes do LLM            |
+| `log_model()`          | `middleware=[...]`                         | Runtime antes do LLM            |
 | `log_model_call()`     | `middleware=[...]`                         | Runtime envolvendo o LLM        |
 | `log_tool()`           | `middleware=[...]`                         | Runtime envolvendo tools        |
 | `hitl`                 | `middleware=[hitl, ...]`                   | Runtime das tools               |
 | `checkpointer`         | `checkpointer=checkpointer`                | LangGraph                       |
 | `store`                | `store=store`                              | LangGraph/ToolRuntime           |
 | `Context`              | `context_schema=Context`                   | Validação e injeção na execução |
-| `make_config()`        | `config=make_config(thread_id)`            | Callback                        |
-| `make_context()`       | `context=make_context()`                   | Callback                        |
 | `send_message()`       | `message.submit(fn=...)`                   | Gradio                          |
 | `process_result()`     | Chamada em `send_message` e `resume_agent` | Seu código                      |
 | `resume_agent()`       | Chamada pelos callbacks de decisão         | Seu código                      |
@@ -763,9 +1171,9 @@ O código foi construído de acordo com as assinaturas documentadas, mas não fo
 | `edit_action()`        | `edit_btn.click(fn=...)`                   | Gradio                          |
 | `reject_action()`      | `reject_btn.click(fn=...)`                 | Gradio                          |
 
-## 10.3. O ciclo completo, desde o texto até a aprovação
+### 10.2. O ciclo completo, desde o texto até a aprovação
 
-```
+```text
 Usuário digita mensagem
     │
     ▼
@@ -774,8 +1182,8 @@ message.submit(...)
     ▼
 send_message(...)
     │
-    ├── make_config(thread_id)
-    ├── make_context()
+    ├── prepara config com thread_id
+    ├── prepara Context
     │
     ▼
 agent.invoke(...)
@@ -865,41 +1273,50 @@ agent.invoke(...)
 
 O modelo pode solicitar duas transferências:
 
+```python
+transferir(destino="João", valor=100)
+transferir(destino="Maria", valor=200)
 ```
-transferir(destino="João", valor=100)transferir(destino="Maria", valor=200)
-```
 
-No modo `per_call`, cada chamada protegida gera sua própria interrupção, sem garantia de ordenação. A documentação permite respondê-las individualmente ou por um dicionário de decisões.&#x20;
+No modo `per_call`, cada chamada protegida gera sua própria interrupção, sem garantia de ordenação. A documentação permite respondê-las individualmente ou por um dicionário de decisões.
 
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
+Para processar uma pendência por vez, podemos usar:
 
-Docs by LangChain
-
-No exemplo integrado, utilizamos:
-
-```
-pending = extract_pending(result)current = pending[0]
+```python
+pending = [{"id": item.id, "value": item.value} for item in result.interrupts]
+current = pending[0]
 ```
 
 A interface apresenta uma revisão por vez. Após a decisão:
 
-```
-result = agent.invoke(    Command(resume={current["id"]: decision}),    config=config,    version="v2",)
+```python
+result = agent.invoke(
+    Command(resume={current["id"]: decision}),
+    config=config,
+    version="v2",
+)
 ```
 
 a função `process_result()` examina novamente as interrupções retornadas. Se houver outra pendência, o painel continua visível com a próxima operação.
 
 Também é possível responder a várias interrupções juntas:
 
+```python
+decisions = {
+    interrupt_1.id: {"type": "approve"},
+    interrupt_2.id: {
+        "type": "reject",
+        "message": "Não autorizado.",
+    },
+}
+result = agent.invoke(
+    Command(resume=decisions),
+    config=config,
+    version="v2",
+)
 ```
-decisions = {    interrupt_1.id: {"type": "approve"},    interrupt_2.id: {        "type": "reject",        "message": "Não autorizado.",    },}result = agent.invoke(    Command(resume=decisions),    config=config,    version="v2",)
-```
 
-Para ações com efeitos colaterais, responder individualmente facilita a validação. A documentação alerta que, ao enviar múltiplas decisões, uma decisão inválida pode coexistir com outras que já foram executadas; reenviar inadvertidamente aprovações anteriores pode duplicar ações.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+Para ações com efeitos colaterais, responder individualmente facilita a validação. A documentação alerta que, ao enviar múltiplas decisões, uma decisão inválida pode coexistir com outras que já foram executadas; reenviar inadvertidamente aprovações anteriores pode duplicar ações.
 
 ### 11.2. E se o usuário atualizar a página durante a aprovação?
 
@@ -913,11 +1330,7 @@ Isso significa:
 - Com um checkpointer persistente, ela pode sobreviver ao reinício da aplicação.
 - Para recuperar uma aprovação pendente após atualizar a página, sua aplicação precisa recuperar o `thread_id` e consultar o estado/checkpoint correspondente.
 
-O exemplo utiliza `gr.State` porque é didático. Para autenticação e recuperação de sessões reais, seria necessário acrescentar essas funcionalidades.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://gradio.app&sz=32)
-
-Gradio+1
+O exemplo utiliza `gr.State` porque é didático. Para autenticação e recuperação de sessões reais, seria necessário acrescentar essas funcionalidades.
 
 ### 11.3. Onde devem ficar os efeitos colaterais?
 
@@ -925,15 +1338,18 @@ A regra é evitar efeitos irreversíveis antes da aprovação.
 
 Por exemplo, isso seria inadequado:
 
-```
-@wrap_tool_calldef middleware_perigoso(request, handler):    cobrar_cartao()  # Efeito antes da autorização    return handler(request)
+```python
+@wrap_tool_call
+def middleware_perigoso(request, handler):
+    cobrar_cartao()  # Efeito antes da autorização
+    return handler(request)
 ```
 
 Um retry ou retomada pode tornar esse efeito problemático.
 
 A estrutura preferível é:
 
-```
+```text
 Tool proposta
     ↓
 HITL
@@ -951,15 +1367,21 @@ Para integrações reais, utilize identificadores de operação e mecanismos de 
 
 Um middleware de retry pode ser registrado assim:
 
+```python
+from langchain.agents.middleware import ToolRetryMiddleware
+retry = ToolRetryMiddleware(max_retries=2)
+agent = create_agent(
+    model=MODEL,
+    tools=[somar, transferir],
+    middleware=[
+        hitl,
+        retry,
+    ],
+    checkpointer=checkpointer,
+)
 ```
-from langchain.agents.middleware import ToolRetryMiddlewareretry = ToolRetryMiddleware(max_retries=2)agent = create_agent(    model=MODEL,    tools=[somar, transferir],    middleware=[        hitl,        retry,    ],    checkpointer=checkpointer,)
-```
 
-No modo `per_call`, a documentação recomenda colocar HITL antes de middlewares de retry e tratamento de erros, para evitar que a aprovação seja solicitada novamente durante retries.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.langchain.com&sz=32)
-
-Docs by LangChain
+No modo `per_call`, a documentação recomenda colocar HITL antes de middlewares de retry e tratamento de erros, para evitar que a aprovação seja solicitada novamente durante retries.
 
 O tratamento de erros da interface é outro assunto. Por exemplo, `edit_action()` utiliza `raise gr.Error(...)` para avisar que o JSON enviado é inválido, sem prosseguir com a operação.
 
@@ -969,31 +1391,40 @@ Além de `approve`, `edit` e `reject`, o HITL permite `respond` para tools nas q
 
 Exemplo:
 
-```
-@tooldef ask_user(pergunta: str) -> str:    """Solicita uma informação ao usuário."""    return "Esta implementação é substituída pelo HITL."
+```python
+@tool
+def ask_user(pergunta: str) -> str:
+    """Solicita uma informação ao usuário."""
+    return "Esta implementação é substituída pelo HITL."
 ```
 
 Política:
 
-```
-hitl = HumanInTheLoopMiddleware(    interrupt_on={        "ask_user": {            "allowed_decisions": ["respond"]        }    },    interrupt_mode="per_call",)
+```python
+hitl = HumanInTheLoopMiddleware(
+    interrupt_on={
+        "ask_user": {
+            "allowed_decisions": ["respond"]
+        }
+    },
+    interrupt_mode="per_call",
+)
 ```
 
 Resposta humana:
 
-```
-decision = {    "type": "respond",    "message": "Minha conta preferida é a conta principal.",}
+```python
+decision = {
+    "type": "respond",
+    "message": "Minha conta preferida é a conta principal.",
+}
 ```
 
 O texto será fornecido como resultado sintético da tool, sem executar sua implementação. Para uma interface Gradio, bastaria utilizar um campo de resposta humana e um callback que criasse esse `decision`, reutilizando `resume_agent()`.
 
 ## 12. Testes práticos para validar o aprendizado
 
-Execute a aplicação e experimente os seguintes cenários, observando também os logs do terminal.
-
-Checklist de execução
-
-0 de 7 verificados
+Após montar uma aplicação com os exemplos, experimente os cenários abaixo e observe os logs do terminal.
 
 Tool comum
 
@@ -1074,11 +1505,11 @@ A grande distinção é que o código da aplicação controla o começo, as deci
 
 ### Documentação oficial consultada
 
-- [LangChain — Agents](https://docs.langchain.com/oss/python/langchain/agents?utm_source=chatgpt.com)
-- [LangChain — Tools e ToolRuntime](https://docs.langchain.com/oss/python/langchain/tools?utm_source=chatgpt.com)
-- [LangChain — Custom Middleware](https://docs.langchain.com/oss/python/langchain/middleware/custom?utm_source=chatgpt.com)
-- [LangChain — Short-term Memory](https://docs.langchain.com/oss/python/langchain/short-term-memory?utm_source=chatgpt.com)
-- [LangChain — Long-term Memory](https://docs.langchain.com/oss/python/langchain/long-term-memory?utm_source=chatgpt.com)
-- [LangChain — Human-in-the-Loop](https://docs.langchain.com/oss/python/langchain/human-in-the-loop?utm_source=chatgpt.com)
-- [Gradio — Blocks e eventos](https://www.gradio.app/docs/gradio/blocks?utm_source=chatgpt.com)
-- [Gradio — Gerenciamento de estado](https://www.gradio.app/guides/state-in-blocks?utm_source=chatgpt.com)
+- [LangChain — Agents](https://docs.langchain.com/oss/python/langchain/agents)
+- [LangChain — Tools e ToolRuntime](https://docs.langchain.com/oss/python/langchain/tools)
+- [LangChain — Custom Middleware](https://docs.langchain.com/oss/python/langchain/middleware/custom)
+- [LangChain — Short-term Memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)
+- [LangChain — Long-term Memory](https://docs.langchain.com/oss/python/langchain/long-term-memory)
+- [LangChain — Human-in-the-Loop](https://docs.langchain.com/oss/python/langchain/human-in-the-loop)
+- [Gradio — Blocks e eventos](https://www.gradio.app/docs/gradio/blocks)
+- [Gradio — Gerenciamento de estado](https://www.gradio.app/guides/state-in-blocks)
