@@ -565,13 +565,26 @@ O interrupt fornece a identificação e os argumentos da chamada proposta. Ele n
 
 ### 8.5. Decisões possíveis
 
+No modo `per_call`, cada interrupção representa uma chamada de tool. A política de `transferir` definida na seção 8.2 permite três decisões:
+
+- `approve`: executa a tool com os argumentos originais.
+- `edit`: executa a tool com os argumentos alterados.
+- `reject`: não executa a chamada e devolve o motivo ao modelo.
+
+Copie **apenas uma** das atribuições abaixo para a interrupção obtida na seção 8.4. Se executar o bloco inteiro, a última atribuição (`edit`) será a escolhida:
+
 ```python
-approve = {"type": "approve"}
-reject = {
+# Aprovar como foi solicitado
+decision = {"type": "approve"}
+
+# OU rejeitar (a mensagem é opcional)
+decision = {
     "type": "reject",
     "message": "Operação não autorizada.",
 }
-edit = {
+
+# OU alterar os argumentos e aprovar
+decision = {
     "type": "edit",
     "edited_action": {
         "name": "transferir",
@@ -581,30 +594,83 @@ edit = {
         },
     },
 }
-respond = {
-    "type": "respond",
-    "message": "Resposta fornecida pelo humano.",
-}
 ```
 
-`respond` é indicado para ferramentas do tipo `ask_user`, quando o humano substitui a resposta da própria ferramenta. Para negar uma operação, use `reject`.
+Ao usar `edit`, mantenha o nome da tool e forneça argumentos compatíveis com sua definição. Para experimentar outra decisão, inicie uma nova execução e use a nova interrupção: uma decisão já enviada não pode ser substituída na mesma interrupção.
+
+Há também `respond`: o humano fornece o resultado da tool sem executá-la. É apropriado para uma tool como `ask_user`; a mensagem é tratada como resultado bem-sucedido. Para negar uma operação, use `reject`. **`respond` não está permitido para `transferir` na política da seção 8.2**; veja um exemplo executável ao final da próxima seção.
 
 ### 8.6. Retomada
 
+Depois de escolher `decision`, retome a interrupção com seu ID e o mesmo `thread_id`. O exemplo abaixo usa `result` e `config` da seção 8.4:
+
 ```python
 from langgraph.types import Command
-result = agent.invoke(
-    Command(
-        resume={
-            interrupt.id: approve
-        }
-    ),
-    config=config,
-    version="v2",
-)
+
+if not result.interrupts:
+    print("Não há interrupção pendente para revisar.")
+else:
+    interrupt = result.interrupts[0]
+    print("Chamada em revisão:", interrupt.value)
+
+    result = agent.invoke(
+        Command(resume={interrupt.id: decision}),
+        config=config,  # Mesmo thread_id da invocação inicial
+        version="v2",
+    )
+
+    if result.interrupts:
+        print("Ainda há interrupções pendentes:", result.interrupts)
+    else:
+        print("Resposta do agente:", result.value["messages"][-1].content)
 ```
 
-O mesmo `thread_id` identifica a execução suspensa.
+`version="v2"` retorna um `GraphOutput`: use `result.interrupts` para consultar as pendências e `result.value` para acessar o estado retornado. Sem esse parâmetro, o retorno padrão é um dicionário; uma interrupção pendente fica na chave `__interrupt__`.
+
+Se houver várias interrupções, o exemplo responde apenas à primeira; as demais continuam pendentes. Uma retomada também pode gerar novas interrupções. A seção 11.1 mostra como lidar com várias decisões.
+
+**Exemplo separado de `respond`:** crie outra tool e outro agente com essa decisão habilitada. Execute este bloco após os imports e a definição de `MODEL` usados no guia:
+
+```python
+@tool
+def ask_user(pergunta: str) -> str:
+    """Pergunta algo ao usuário quando uma informação estiver faltando."""
+    return "Resposta não fornecida."
+
+agent_ask = create_agent(
+    model=MODEL,
+    tools=[ask_user],
+    middleware=[HumanInTheLoopMiddleware(
+        interrupt_on={"ask_user": {"allowed_decisions": ["respond"]}},
+        interrupt_mode="per_call",
+    )],
+    checkpointer=InMemorySaver(),
+)
+config_ask = {"configurable": {"thread_id": "exemplo-ask-user"}}
+result_ask = agent_ask.invoke(
+    {"messages": [{"role": "user", "content": "Use ask_user para perguntar minha cor favorita."}]},
+    config=config_ask,
+    version="v2",
+)
+
+if result_ask.interrupts:
+    interrupt_ask = result_ask.interrupts[0]
+    print("Pergunta proposta:", interrupt_ask.value["args"])
+    result_ask = agent_ask.invoke(
+        Command(resume={interrupt_ask.id: {
+            "type": "respond",
+            "message": "Minha cor favorita é azul.",
+        }}),
+        config=config_ask,
+        version="v2",
+    )
+    if result_ask.interrupts:
+        print("Ainda há interrupções pendentes:", result_ask.interrupts)
+    else:
+        print("Resposta do agente:", result_ask.value["messages"][-1].content)
+else:
+    print("O modelo não solicitou a tool ask_user.")
+```
 
 ### 8.7. Fluxo com retorno ao frontend
 
