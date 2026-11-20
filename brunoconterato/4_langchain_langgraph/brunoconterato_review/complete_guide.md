@@ -2,23 +2,11 @@
 
 Guia de estudo e implementação · APIs atuais do LangChain 1.x, LangGraph e Gradio · Revisado em novembro de 2026
 
-Este guia substitui o anterior, preservando os conceitos estudados e corrigindo as lacunas de integração. O foco é entender exatamente onde cada objeto ou função é definido, onde é registrado, quem o chama e como seu resultado chega ao próximo componente.
+O foco é entender onde cada componente é definido, como é conectado ao agente e como seu resultado chega ao próximo componente.
 
-## 1. Correções e melhorias em relação ao guia anterior
+## 1. O que você vai aprender
 
-Identifiquei sete pontos relevantes que precisavam de correção ou maior detalhamento.
-
-| Problema anterior                                                               | Correção neste guia                                                                                     |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Gradio não explicava como o HITL mostrava os botões                             | Mostrar explicitamente o callback que recebe `result.interrupts` e torna o painel de aprovação visível  |
-| Aprovação e rejeição não demonstravam toda a atualização da UI                  | Cada callback retorna os valores e propriedades dos componentes Gradio                                  |
-| O código não deixava clara a ligação entre `fn`, `inputs`, `outputs` e `return` | Mapear a ordem dos argumentos e valores retornados                                                      |
-| Não havia tratamento completo de múltiplas interrupções                         | Revisar cada interrupção individualmente usando seu ID                                                  |
-| Misturava conceitos de estado                                                   | Distinguir `AgentState`, `gr.State`, `Context`, `ToolRuntime`, `Checkpointer` e `Store`                 |
-| Não explicava adequadamente o retorno após `Command(resume)`                    | Demonstrar que a retomada pode produzir outra interrupção, e não necessariamente uma resposta final     |
-| Não delimitava erros e efeitos colaterais                                       | Incluir validação de edição, proteção contra novas mensagens durante uma revisão e cuidados com retries |
-
-Há ainda uma distinção importante: no modo `per_call` atual, o HITL intercepta cada chamada protegida dentro da cadeia de middleware das tools, enquanto no modo padrão `batched` a revisão é agrupada após a resposta do modelo.
+O guia apresenta tools, memória, middleware e aprovação humana (HITL), até a integração do agente com uma interface Gradio.
 
 ## 2. Mapa completo da arquitetura
 
@@ -710,75 +698,43 @@ Esse último ponto é essencial: um `resume` não garante que o agente terminou.
 
 ## 9. Gradio: integração completa com HITL
 
-Esta é a principal seção corrigida em relação ao guia anterior.
+### 9.1. O que é Gradio?
 
-### 9.1. O que o Gradio precisa fazer
+Gradio é uma biblioteca Python para criar interfaces no navegador. Você define **componentes**, como campos de texto e botões, e conecta ações do usuário a funções Python chamadas **callbacks**. O retorno de cada função atualiza os componentes escolhidos.
 
-O Gradio precisa conectar seis etapas:
-
-1. Receber mensagem: `gr.Textbox.submit()` chama `send_message()`.
-2. Executar agente: `send_message()` chama `agent.invoke()`.
-3. Detectar HITL: o callback verifica `result.interrupts`.
-4. Exibir a revisão: o callback retorna `gr.update(visible=True)` para o painel e apresenta a tool e seus argumentos.
-5. Receber decisão: os botões chamam `approve_action()`, `reject_action()` ou `edit_action()`.
-6. Retomar o agente: esses callbacks enviam `Command(resume=...)`, recebem o novo resultado e atualizam toda a interface.
-
-O Gradio não detecta automaticamente o HITL. É o callback Python que interpreta `result.interrupts` e torna os componentes visíveis.
-
-### 9.2. Ligação entre `inputs`, parâmetros, `return` e `outputs`
-
-Considere:
+Comece com uma interface independente do agente:
 
 ```python
-def somar_interface(a, b):
-    resultado = a + b
-    return resultado
+import gradio as gr
+
+def cumprimentar(nome):
+    return f"Olá, {nome}!"
+
+with gr.Blocks() as demo:
+    nome = gr.Textbox(label="Seu nome")
+    botao = gr.Button("Cumprimentar")
+    resposta = gr.Textbox(label="Resposta")
+    botao.click(fn=cumprimentar, inputs=[nome], outputs=[resposta])
+
+demo.launch()
 ```
 
-E:
+`gr.Blocks()` reúne os componentes e seus eventos. Ao clicar no botão, o Gradio passa o valor de `nome` para `cumprimentar` e coloca o retorno em `resposta`. Execute o código e abra o endereço informado pelo Gradio.
 
-```python
-button.click(
-    fn=somar_interface,
-    inputs=[input_a, input_b],
-    outputs=[resultado_textbox],
-)
-```
+### 9.2. Entradas, saídas e atualizações
 
-Mapeamento:
+Em `botao.click(...)`, `fn` indica a função, `inputs` contém os componentes cujos valores entram na função, e `outputs` contém os componentes que recebem o retorno. A **ordem** importa: o primeiro item de `inputs` vira o primeiro argumento; o primeiro valor retornado atualiza o primeiro item de `outputs`.
 
-```text
-inputs[0] ──→ parâmetro a
-inputs[1] ──→ parâmetro b
+Um callback pode retornar vários valores. Por exemplo, `return "Pronto", gr.update(visible=True)` atualiza o texto do primeiro componente de saída e torna visível o segundo. `gr.update(...)` altera propriedades do componente, como sua visibilidade.
 
-fn ─────────→ somar_interface()
-
-return ─────→ resultado_textbox
-```
-
-Para múltiplos retornos:
-
-```python
-def atualizar():
-    return "Texto", gr.update(visible=True)
-```
-
-```python
-button.click(
-    fn=atualizar,
-    inputs=[],
-    outputs=[status, painel],
-)
-```
-
-A primeira saída atualiza o conteúdo de `status`. A segunda altera a visibilidade de `painel`.
-
-É exatamente assim que o HITL será apresentado ao usuário. A documentação do Gradio especifica que os argumentos da função correspondem aos componentes em `inputs`, e os valores retornados correspondem aos componentes em `outputs`.
+Para conectar o HITL, usaremos esse mesmo mecanismo: enviar a mensagem ao agente, mostrar a interrupção e, após um clique, retomar o agente com a decisão. Os trechos a seguir usam o `agent` da seção 8.3, com `transferir` protegida e checkpointer configurado. São trechos para estudo: reúna as definições e os registros em um arquivo ou notebook para executá-los.
 
 ### 9.3. Definir os componentes da interface
 
 ```python
 import gradio as gr
+import json
+import math
 import uuid
 
 with gr.Blocks() as demo:
@@ -786,9 +742,7 @@ with gr.Blocks() as demo:
         lambda: str(uuid.uuid4())
     )
     pending = gr.State([])
-    chatbot = gr.Chatbot(
-        type="messages"
-    )
+    chatbot = gr.Chatbot()
     message = gr.Textbox(
         label="Mensagem"
     )
@@ -807,25 +761,13 @@ with gr.Blocks() as demo:
         reject_btn = gr.Button("Rejeitar")
 ```
 
-Inicialmente:
+`gr.Chatbot` apresenta a conversa; `gr.Textbox` recebe texto; `gr.Markdown` mostra a descrição da ação; `gr.Code` permite editar JSON; e `gr.Button` cria um botão. `gr.Group` agrupa o painel, que começa oculto por `visible=False`.
 
-```python
-gr.Group(visible=False)
-```
-
-significa que o painel de revisão está oculto.
-
-Ele aparecerá quando o callback retornar:
-
-```python
-gr.update(visible=True)
-```
-
-para o componente `review_panel`.
+`gr.State` guarda valores por sessão do navegador, sem mostrá-los na interface. Aqui, `thread_id` identifica a conversa no checkpointer e `pending` guarda as interrupções recebidas. A função com `uuid.uuid4()` gera um identificador para cada sessão. Os imports `json` e `math` serão usados para validar a edição.
 
 ### 9.4. Função que interpreta o resultado do agente
 
-Esta função é a ligação entre LangGraph e Gradio.
+Esta função recebe o resultado da execução e o histórico exibido no chat. Se houver interrupções, prepara a primeira para revisão e devolve uma atualização que abre o painel. Caso contrário, acrescenta a resposta ao histórico e fecha o painel. `pending` conserva o ID e os dados de cada interrupção para a retomada.
 
 ```python
 import json
@@ -858,7 +800,8 @@ def process_result(result, history):
             review_text,  # Markdown
             edited_json,  # Code
             gr.update(visible=True),  # Group
-        )  # Sem interrupções: execução terminou
+        )
+    # Sem interrupções: execução terminou
     answer = result.value["messages"][-1].content
     history = history + [{
         "role": "assistant",
@@ -873,7 +816,7 @@ def process_result(result, history):
     )
 ```
 
-O ponto que faltava no guia anterior é esta conexão:
+A conexão entre a interrupção e o painel é:
 
 ```text
 result.interrupts
@@ -888,6 +831,8 @@ review_panel aparece
 Não existe uma chamada automática para `approve_btn.click()`. O middleware apenas produz a interrupção; o Gradio espera que o usuário clique.
 
 ### 9.5. Callback de envio
+
+Ao enviar uma mensagem, esta função bloqueia novos envios enquanto há uma revisão pendente, chama o agente com o `thread_id` da sessão e passa o resultado a `process_result`. O histórico da interface é uma lista de mensagens com `role` e `content`.
 
 ```python
 def send_message(message, history, thread_id, pending):
@@ -911,7 +856,6 @@ def send_message(message, history, thread_id, pending):
             {"role": "user", "content": message}
         ]},
         config=config,
-        context=Context(user_id="usuario-demo"),
         version="v2",
     )
     history = history + [{
@@ -940,23 +884,24 @@ O `agent.invoke()` termina ao produzir o interrupt. A função então devolve a 
 ### 9.6. Conectar o envio à interface
 
 ```python
-message.submit(
-    fn=send_message,
-    inputs=[
-        message,
-        chatbot,
-        thread_id,
-        pending,
-    ],
-    outputs=[
-        chatbot,
-        pending,
-        message,
-        review_info,
-        edited_args,
-        review_panel,
-    ],
-)
+with demo:
+    message.submit(
+        fn=send_message,
+        inputs=[
+            message,
+            chatbot,
+            thread_id,
+            pending,
+        ],
+        outputs=[
+            chatbot,
+            pending,
+            message,
+            review_info,
+            edited_args,
+            review_panel,
+        ],
+    )
 ```
 
 Mapeamento explícito:
@@ -1000,7 +945,6 @@ def resume_agent(
             }
         ),
         config=config,
-        context=Context(user_id="usuario-demo"),
         version="v2",
     )
     return process_result(result, history)
@@ -1046,21 +990,22 @@ def approve_action(history, pending, thread_id):
 Conexão:
 
 ```python
-approve_btn.click(
-    fn=approve_action,
-    inputs=[
-        chatbot,
-        pending,
-        thread_id,
-    ],
-    outputs=[
-        chatbot,
-        pending,
-        review_info,
-        edited_args,
-        review_panel,
-    ],
-)
+with demo:
+    approve_btn.click(
+        fn=approve_action,
+        inputs=[
+            chatbot,
+            pending,
+            thread_id,
+        ],
+        outputs=[
+            chatbot,
+            pending,
+            review_info,
+            edited_args,
+            review_panel,
+        ],
+    )
 ```
 
 ### 9.9. Botão Rejeitar — callback completo
@@ -1090,27 +1035,28 @@ def reject_action(
 Conexão:
 
 ```python
-reject_btn.click(
-    fn=reject_action,
-    inputs=[
-        chatbot,
-        pending,
-        thread_id,
-        reject_reason,
-    ],
-    outputs=[
-        chatbot,
-        pending,
-        review_info,
-        edited_args,
-        review_panel,
-    ],
-)
+with demo:
+    reject_btn.click(
+        fn=reject_action,
+        inputs=[
+            chatbot,
+            pending,
+            thread_id,
+            reject_reason,
+        ],
+        outputs=[
+            chatbot,
+            pending,
+            review_info,
+            edited_args,
+            review_panel,
+        ],
+    )
 ```
 
 ### 9.10. Botão Editar — callback completo
 
-Aqui a validação acontece antes de retomar o agente. Este exemplo usa `import json` e `import math`.
+O campo `edited_args` contém texto JSON. Antes de retomar, o callback converte esse texto em dicionário e valida os campos de `transferir`; `math.isfinite` impede valores infinitos ou indefinidos.
 
 ```python
 def edit_action(
@@ -1155,25 +1101,32 @@ def edit_action(
 Conexão:
 
 ```python
-edit_btn.click(
-    fn=edit_action,
-    inputs=[
-        chatbot,
-        pending,
-        thread_id,
-        edited_args,
-    ],
-    outputs=[
-        chatbot,
-        pending,
-        review_info,
-        edited_args,
-        review_panel,
-    ],
-)
+with demo:
+    edit_btn.click(
+        fn=edit_action,
+        inputs=[
+            chatbot,
+            pending,
+            thread_id,
+            edited_args,
+        ],
+        outputs=[
+            chatbot,
+            pending,
+            review_info,
+            edited_args,
+            review_panel,
+        ],
+    )
 ```
 
-Agora a interface possui três operações completas, independentes, mas reutilizando `resume_agent()`.
+Os três botões usam `resume_agent()` para atualizar os mesmos componentes. Depois de reunir os trechos, inicie a interface com:
+
+```python
+demo.launch()
+```
+
+Registre os eventos nos blocos `with demo:` mostrados acima antes de chamar `launch()`.
 
 ### 9.11. O que acontece depois de clicar?
 
@@ -1212,7 +1165,7 @@ Se houver novo interrupt, mantém o painel aberto. Caso contrário, exibe a resp
 
 ## 10. Integração dos componentes
 
-Os trechos da seção 9 mostram como conectar o agente à interface. O código original desta seção estava truncado e não continha uma aplicação completa; por isso, os exemplos acima devem ser usados como referência para montar a aplicação, não como um `app.py` pronto para executar.
+Os trechos da seção 9 mostram como conectar o agente à interface.
 
 A transferência é simulada. Para uma aplicação real, configure persistência, autenticação, isolamento por usuário e tratamento de erros adequados.
 
