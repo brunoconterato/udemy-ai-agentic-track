@@ -696,19 +696,21 @@ Nova resposta ou novo interrupt
 
 Esse último ponto é essencial: um `resume` não garante que o agente terminou. Ele pode solicitar novas tools e produzir outras interrupções.
 
-## 9. Gradio: integração completa com HITL
+## 9. Gradio: da interface simples à aprovação humana
 
-### 9.1. O que é Gradio?
+Nesta seção, cada etapa acrescenta algo à anterior. Os exemplos usam o ambiente e o agente com HITL da seção 8.3. Execute as definições daquela seção antes de começar.
 
-Gradio é uma biblioteca Python para criar interfaces no navegador. Você define **componentes**, como campos de texto e botões, e conecta ações do usuário a funções Python chamadas **callbacks**. O retorno de cada função atualiza os componentes escolhidos.
+### 9.1. Uma primeira interface
 
-Comece com uma interface independente do agente:
+Gradio cria interfaces no navegador usando Python. Vamos começar com um campo, um botão e uma resposta:
 
 ```python
 import gradio as gr
 
-def cumprimentar(nome):
+
+def cumprimentar(nome: str) -> str:
     return f"Olá, {nome}!"
+
 
 with gr.Blocks() as demo:
     nome = gr.Textbox(label="Seu nome")
@@ -719,449 +721,251 @@ with gr.Blocks() as demo:
 demo.launch()
 ```
 
-`gr.Blocks()` reúne os componentes e seus eventos. Ao clicar no botão, o Gradio passa o valor de `nome` para `cumprimentar` e coloca o retorno em `resposta`. Execute o código e abra o endereço informado pelo Gradio.
+`gr.Blocks()` reúne os componentes. Ao clicar, o Gradio chama `cumprimentar`: o valor de `nome`, em `inputs`, entra na função; o retorno atualiza `resposta`, em `outputs`. Essa função acionada pelo evento é chamada de **callback**.
 
-### 9.2. Entradas, saídas e atualizações
+Execute o exemplo e abra o endereço informado. Nas próximas etapas, crie uma nova interface; não acrescente os trechos à interface de cumprimento.
 
-Em `botao.click(...)`, `fn` indica a função, `inputs` contém os componentes cujos valores entram na função, e `outputs` contém os componentes que recebem o retorno. A **ordem** importa: o primeiro item de `inputs` vira o primeiro argumento; o primeiro valor retornado atualiza o primeiro item de `outputs`.
+### 9.2. Uma conversa com o agente
 
-Um callback pode retornar vários valores. Por exemplo, `return "Pronto", gr.update(visible=True)` atualiza o texto do primeiro componente de saída e torna visível o segundo. `gr.update(...)` altera propriedades do componente, como sua visibilidade.
-
-Para conectar o HITL, usaremos esse mesmo mecanismo: enviar a mensagem ao agente, mostrar a interrupção e, após um clique, retomar o agente com a decisão. Os trechos a seguir usam o `agent` da seção 8.3, com `transferir` protegida e checkpointer configurado. São trechos para estudo: reúna as definições e os registros em um arquivo ou notebook para executá-los.
-
-### 9.3. Definir os componentes da interface
+Primeiro, crie um agente sem HITL para testar somente a conversa. Ele usa a tool `somar`, definida na seção 5, e um checkpointer para guardar o histórico:
 
 ```python
-import gradio as gr
-import json
-import math
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
+
+agente_chat = create_agent(
+    model=MODEL,
+    tools=[somar],
+    checkpointer=InMemorySaver(),
+)
+```
+
+Agora crie o callback. Ele recebe a mensagem, o histórico exibido e o identificador da conversa. O agente recupera seu próprio histórico pelo `thread_id`:
+
+```python
+def enviar(texto, historico, thread_id):
+    if not texto.strip():
+        return "", historico
+
+    resultado = agente_chat.invoke(
+        {"messages": [{"role": "user", "content": texto}]},
+        config={"configurable": {"thread_id": thread_id}},
+        version="v2",
+    )
+    resposta = resultado.value["messages"][-1].content
+    historico = historico + [
+        {"role": "user", "content": texto},
+        {"role": "assistant", "content": str(resposta)},
+    ]
+    return "", historico
+```
+
+O primeiro retorno limpa o campo de texto; o segundo atualiza o chat. Monte a interface e conecte o envio ao pressionar Enter:
+
+```python
 import uuid
 
 with gr.Blocks() as demo:
-    thread_id = gr.State(
-        lambda: str(uuid.uuid4())
+    thread_id = gr.State(lambda: str(uuid.uuid4()))
+    chat = gr.Chatbot()
+    mensagem = gr.Textbox(label="Mensagem")
+
+    mensagem.submit(
+        fn=enviar,
+        inputs=[mensagem, chat, thread_id],
+        outputs=[mensagem, chat],
     )
-    pending = gr.State([])
-    chatbot = gr.Chatbot()
-    message = gr.Textbox(
-        label="Mensagem"
-    )
-    with gr.Group(visible=False) as review_panel:
-        review_info = gr.Markdown()
-        edited_args = gr.Code(
-            label="Argumentos JSON",
-            language="json",
-            interactive=True,
-        )
-        reject_reason = gr.Textbox(
-            label="Motivo da rejeição"
-        )
-        approve_btn = gr.Button("Aprovar")
-        edit_btn = gr.Button("Editar e aprovar")
-        reject_btn = gr.Button("Rejeitar")
+
+demo.launch()
 ```
 
-`gr.Chatbot` apresenta a conversa; `gr.Textbox` recebe texto; `gr.Markdown` mostra a descrição da ação; `gr.Code` permite editar JSON; e `gr.Button` cria um botão. `gr.Group` agrupa o painel, que começa oculto por `visible=False`.
+`gr.Chatbot` exibe as mensagens. `gr.State` guarda um valor para cada sessão do navegador; aqui, ele cria um `thread_id` diferente para cada conversa. Como no botão anterior, a ordem de `inputs` segue os parâmetros da função, e a ordem de `outputs` segue seus retornos.
 
-`gr.State` guarda valores por sessão do navegador, sem mostrá-los na interface. Aqui, `thread_id` identifica a conversa no checkpointer e `pending` guarda as interrupções recebidas. A função com `uuid.uuid4()` gera um identificador para cada sessão. Os imports `json` e `math` serão usados para validar a edição.
+Teste duas mensagens na mesma conversa. A próxima etapa trocará `agente_chat` pelo `agent` com HITL da seção 8.3.
 
-### 9.4. Função que interpreta o resultado do agente
+### 9.3. Mostrar uma solicitação de aprovação
 
-Esta função recebe o resultado da execução e o histórico exibido no chat. Se houver interrupções, prepara a primeira para revisão e devolve uma atualização que abre o painel. Caso contrário, acrescenta a resposta ao histórico e fecha o painel. `pending` conserva o ID e os dados de cada interrupção para a retomada.
+Com HITL, a chamada pode parar em `resultado.interrupts`, como vimos na seção 8. Precisamos guardar a pendência e exibir a tool e seus argumentos. Primeiro, crie uma função para preparar a interface depois de cada execução:
 
 ```python
 import json
 
-def process_result(result, history):
-    interrupts = list(result.interrupts)
-    if interrupts:
-        pending = [
-            {
-                "id": item.id,
-                "value": item.value,
-            }
-            for item in interrupts
-        ]
-        current = pending[0]
-        action = current["value"]
-        review_text = (
-            f"### Aprovação necessária\n\n"
-            f"**Tool:** `{action['name']}`\n\n"
-            f"**Interrupções pendentes:** {len(pending)}"
-        )
-        edited_json = json.dumps(
-            action["args"],
-            indent=2,
-            ensure_ascii=False,
-        )
-        return (
-            history,  # Chatbot
-            pending,  # gr.State
-            review_text,  # Markdown
-            edited_json,  # Code
-            gr.update(visible=True),  # Group
-        )
-    # Sem interrupções: execução terminou
-    answer = result.value["messages"][-1].content
-    history = history + [{
-        "role": "assistant",
-        "content": str(answer),
-    }]
-    return (
-        history,
-        [],
-        "",
-        "",
-        gr.update(visible=False),
-    )
+
+def processar_resultado(resultado, historico):
+    pendencias = [
+        {"id": item.id, "value": item.value}
+        for item in resultado.interrupts
+    ]
+    if pendencias:
+        acao = pendencias[0]["value"]
+        aviso = f"Aprovação necessária para a tool **{acao['name']}**."
+        argumentos = json.dumps(acao["args"], ensure_ascii=False, indent=2)
+        return historico, pendencias, aviso, argumentos
+
+    resposta = resultado.value["messages"][-1].content
+    historico = historico + [{"role": "assistant", "content": str(resposta)}]
+    return historico, [], "", ""
 ```
 
-A conexão entre a interrupção e o painel é:
+A função mostra uma pendência por vez. Se não houver interrupção, acrescenta a resposta do agente. Os argumentos são exibidos como texto JSON para que possam ser editados mais adiante.
 
-```text
-result.interrupts
-        ↓
-process_result()
-        ↓
-gr.update(visible=True)
-        ↓
-review_panel aparece
-```
-
-Não existe uma chamada automática para `approve_btn.click()`. O middleware apenas produz a interrupção; o Gradio espera que o usuário clique.
-
-### 9.5. Callback de envio
-
-Ao enviar uma mensagem, esta função bloqueia novos envios enquanto há uma revisão pendente, chama o agente com o `thread_id` da sessão e passa o resultado a `process_result`. O histórico da interface é uma lista de mensagens com `role` e `content`.
+Substitua a função `enviar` pela seguinte. Ela usa o agente protegido, impede outro envio durante a revisão e delega a atualização a `processar_resultado`:
 
 ```python
-def send_message(message, history, thread_id, pending):
-    history = history or []
-    if pending:
-        raise gr.Error(
-            "Resolva a aprovação pendente antes de enviar outra mensagem."
-        )
-    if not message.strip():
-        return (
-            history, pending, message,
-            "", "", gr.update(visible=False)
-        )
-    config = {
-        "configurable": {
-            "thread_id": thread_id
-        }
-    }
-    result = agent.invoke(
-        {"messages": [
-            {"role": "user", "content": message}
-        ]},
-        config=config,
+def enviar(texto, historico, thread_id, pendencias):
+    if pendencias:
+        raise gr.Error("Resolva a aprovação pendente antes de enviar outra mensagem.")
+    if not texto.strip():
+        return "", historico, pendencias, "", ""
+
+    resultado = agent.invoke(
+        {"messages": [{"role": "user", "content": texto}]},
+        config={"configurable": {"thread_id": thread_id}},
         version="v2",
     )
-    history = history + [{
-        "role": "user",
-        "content": message,
-    }]
-    (
-        history,
-        pending,
-        review_text,
-        edited_json,
-        panel_update,
-    ) = process_result(result, history)
-    return (
-        history,
-        pending,
-        "",  # Limpa campo de mensagem
-        review_text,
-        edited_json,
-        panel_update,
-    )
+    historico = historico + [{"role": "user", "content": texto}]
+    historico, pendencias, aviso, argumentos = processar_resultado(resultado, historico)
+    return "", historico, pendencias, aviso, argumentos
 ```
 
-O `agent.invoke()` termina ao produzir o interrupt. A função então devolve a informação para o Gradio.
-
-### 9.6. Conectar o envio à interface
+Substitua a interface da etapa anterior por esta:
 
 ```python
-with demo:
-    message.submit(
-        fn=send_message,
-        inputs=[
-            message,
-            chatbot,
-            thread_id,
-            pending,
-        ],
-        outputs=[
-            chatbot,
-            pending,
-            message,
-            review_info,
-            edited_args,
-            review_panel,
-        ],
+with gr.Blocks() as demo:
+    thread_id = gr.State(lambda: str(uuid.uuid4()))
+    pendencias = gr.State([])
+    chat = gr.Chatbot()
+    mensagem = gr.Textbox(label="Mensagem")
+    aviso = gr.Markdown()
+    argumentos = gr.Textbox(label="Argumentos JSON", lines=3)
+
+    mensagem.submit(
+        fn=enviar,
+        inputs=[mensagem, chat, thread_id, pendencias],
+        outputs=[mensagem, chat, pendencias, aviso, argumentos],
     )
+
+demo.launch()
 ```
 
-Mapeamento explícito:
+O novo `gr.State` guarda os IDs e dados das interrupções da sessão. `gr.Markdown` mostra o aviso; o campo de argumentos permite revisar o que o modelo propôs. Peça uma transferência simulada: se o modelo solicitar `transferir`, a interface mostrará a pendência. Ainda falta escolher uma decisão.
 
-| `return` de `send_message`      | Componente atualizado |
-| ------------------------------- | --------------------- |
-| `history`                       | `chatbot`             |
-| `pending`                       | `gr.State`            |
-| `""`                            | `message`             |
-| `review_text`                   | `review_info`         |
-| `edited_json`                   | `edited_args`         |
-| `gr.update(visible=True/False)` | `review_panel`        |
+### 9.4. Botão Aprovar
 
-### 9.7. Função central para retomar o agente
-
-As três decisões humanas possuem um comportamento comum: gerar um `Command`, chamar `agent.invoke()` e processar o resultado.
-
-Podemos centralizar essa lógica:
+Para retomar o agente, precisamos do ID da interrupção e do mesmo `thread_id`. A função abaixo recebe uma decisão e volta a processar o resultado, pois a retomada pode gerar outra interrupção:
 
 ```python
 from langgraph.types import Command
 
-def resume_agent(
-    decision,
-    history,
-    pending,
-    thread_id,
-):
-    if not pending:
-        raise gr.Error("Não há interrupção pendente.")
-    current = pending[0]
-    config = {
-        "configurable": {
-            "thread_id": thread_id
-        }
-    }
-    result = agent.invoke(
-        Command(
-            resume={
-                current["id"]: decision
-            }
-        ),
-        config=config,
+
+def resume_agent(decisao, historico, pendencias, thread_id):
+    if not pendencias:
+        raise gr.Error("Não há aprovação pendente.")
+
+    resultado = agent.invoke(
+        Command(resume={pendencias[0]["id"]: decisao}),
+        config={"configurable": {"thread_id": thread_id}},
         version="v2",
     )
-    return process_result(result, history)
+    return processar_resultado(resultado, historico)
 ```
 
-Essa função não chama nenhuma tool manualmente.
-
-```text
-resume_agent()
-     ↓
-Command(resume={interrupt_id: decision})
-     ↓
-agent.invoke()
-     ↓
-LangGraph recupera checkpoint
-     ↓
-HITL recebe decisão
-     ↓
-runtime continua execução
-     ↓
-result
-     ↓
-process_result()
-     ↓
-Gradio atualiza componentes
-```
-
-### 9.8. Botão Aprovar — callback completo
+O callback de aprovação fornece a decisão `approve`, já apresentada na seção 8:
 
 ```python
-def approve_action(history, pending, thread_id):
-    decision = {
-        "type": "approve"
-    }
-    return resume_agent(
-        decision=decision,
-        history=history,
-        pending=pending,
-        thread_id=thread_id,
-    )
+def aprovar(historico, pendencias, thread_id):
+    return resume_agent({"type": "approve"}, historico, pendencias, thread_id)
 ```
 
-Conexão:
+Na interface da etapa 9.3, acrescente o botão e seu evento **após o bloco que cria os componentes e antes de `demo.launch()`**:
 
 ```python
 with demo:
-    approve_btn.click(
-        fn=approve_action,
-        inputs=[
-            chatbot,
-            pending,
-            thread_id,
-        ],
-        outputs=[
-            chatbot,
-            pending,
-            review_info,
-            edited_args,
-            review_panel,
-        ],
+    botao_aprovar = gr.Button("Aprovar")
+    botao_aprovar.click(
+        fn=aprovar,
+        inputs=[chat, pendencias, thread_id],
+        outputs=[chat, pendencias, aviso, argumentos],
     )
 ```
 
-### 9.9. Botão Rejeitar — callback completo
+Mantenha o evento `mensagem.submit` e `demo.launch()`. Execute novamente a interface, solicite uma transferência e aprove. Quando não houver outra pendência, o chat recebe a resposta e os campos de revisão são limpos.
+
+### 9.5. Botão Rejeitar
+
+A rejeição também usa `resume_agent`, agora com um motivo:
 
 ```python
-def reject_action(
-    history,
-    pending,
-    thread_id,
-    reason,
-):
-    decision = {
+def rejeitar(historico, pendencias, thread_id, motivo):
+    decisao = {
         "type": "reject",
-        "message": (
-            reason.strip()
-            or "Operação não autorizada. Não repita a chamada."
-        ),
+        "message": motivo.strip() or "Operação não autorizada.",
     }
-    return resume_agent(
-        decision=decision,
-        history=history,
-        pending=pending,
-        thread_id=thread_id,
-    )
+    return resume_agent(decisao, historico, pendencias, thread_id)
 ```
 
-Conexão:
+Acrescente após o bloco que cria a interface e antes de `demo.launch()`:
 
 ```python
 with demo:
-    reject_btn.click(
-        fn=reject_action,
-        inputs=[
-            chatbot,
-            pending,
-            thread_id,
-            reject_reason,
-        ],
-        outputs=[
-            chatbot,
-            pending,
-            review_info,
-            edited_args,
-            review_panel,
-        ],
+    motivo = gr.Textbox(label="Motivo da rejeição")
+    botao_rejeitar = gr.Button("Rejeitar")
+    botao_rejeitar.click(
+        fn=rejeitar,
+        inputs=[chat, pendencias, thread_id, motivo],
+        outputs=[chat, pendencias, aviso, argumentos],
     )
 ```
 
-### 9.10. Botão Editar — callback completo
+Execute novamente, solicite outra transferência e rejeite. O agente recebe o motivo, e a chamada rejeitada não é executada.
 
-O campo `edited_args` contém texto JSON. Antes de retomar, o callback converte esse texto em dicionário e valida os campos de `transferir`; `math.isfinite` impede valores infinitos ou indefinidos.
+### 9.6. Botão Editar e aprovar
+
+O campo `argumentos` já contém o JSON proposto. O callback abaixo o converte em dicionário, valida os campos da transferência e envia a decisão `edit`:
 
 ```python
-def edit_action(
-    history,
-    pending,
-    thread_id,
-    edited_json,
-):
-    if not pending:
-        raise gr.Error("Não há interrupção pendente.")
-    current = pending[0]
-    original = current["value"]
+import math
+
+
+def editar(historico, pendencias, thread_id, texto_json):
+    if not pendencias:
+        raise gr.Error("Não há aprovação pendente.")
     try:
-        args = json.loads(edited_json)
-    except json.JSONDecodeError as exc:
-        raise gr.Error(f"JSON inválido: {exc}")
-    if not isinstance(args, dict):
-        raise gr.Error("Os argumentos precisam ser um objeto JSON.")
-    if original["name"] == "transferir":
-        if set(args) != {"destino", "valor"}:
-            raise gr.Error(
-                "Informe somente os campos destino e valor."
-            )
-        if not isinstance(args["destino"], str):
-            raise gr.Error("Destino inválido.")
-        if not args["destino"].strip():
-            raise gr.Error("Destino não pode ser vazio.")
-        try:
-            valor = float(args["valor"])
-        except (TypeError, ValueError):
-            raise gr.Error("Valor inválido.")
-        if not math.isfinite(valor) or valor <= 0:
-            raise gr.Error("O valor deve ser positivo e finito.")
-        args["valor"] = valor
-    decision = {
+        args = json.loads(texto_json)
+    except json.JSONDecodeError:
+        raise gr.Error("Informe um JSON válido.")
+
+    if not isinstance(args, dict) or set(args) != {"destino", "valor"}:
+        raise gr.Error("Informe os campos destino e valor.")
+    if not isinstance(args["destino"], str) or not args["destino"].strip():
+        raise gr.Error("Informe um destino não vazio.")
+    if isinstance(args["valor"], bool) or not isinstance(args["valor"], (int, float)):
+        raise gr.Error("O valor deve ser um número.")
+    if not math.isfinite(args["valor"]) or args["valor"] <= 0:
+        raise gr.Error("O valor deve ser positivo e finito.")
+
+    decisao = {
         "type": "edit",
-        "edited_action": {"name": original["name"], "args": args},
+        "edited_action": {"name": pendencias[0]["value"]["name"], "args": args},
     }
-    return resume_agent(decision, history, pending, thread_id)
+    return resume_agent(decisao, historico, pendencias, thread_id)
 ```
 
-Conexão:
+Acrescente também antes de `demo.launch()`:
 
 ```python
 with demo:
-    edit_btn.click(
-        fn=edit_action,
-        inputs=[
-            chatbot,
-            pending,
-            thread_id,
-            edited_args,
-        ],
-        outputs=[
-            chatbot,
-            pending,
-            review_info,
-            edited_args,
-            review_panel,
-        ],
+    botao_editar = gr.Button("Editar e aprovar")
+    botao_editar.click(
+        fn=editar,
+        inputs=[chat, pendencias, thread_id, argumentos],
+        outputs=[chat, pendencias, aviso, argumentos],
     )
 ```
 
-Os três botões usam `resume_agent()` para atualizar os mesmos componentes. Depois de reunir os trechos, inicie a interface com:
+Solicite uma nova transferência, altere o valor no JSON e clique em **Editar e aprovar**. Se o JSON ou os campos forem inválidos, `gr.Error` mostra o problema e o agente permanece pausado. A validação acima é específica de `transferir`; outras tools precisam de validações apropriadas aos seus argumentos.
 
-```python
-demo.launch()
-```
-
-Registre os eventos nos blocos `with demo:` mostrados acima antes de chamar `launch()`.
-
-### 9.11. O que acontece depois de clicar?
-
-1\. Tool proposta
-
-`transferir(destino="João", valor=500)`
-
-2\. Painel Gradio apresentado
-
-Exemplo ilustrativo do que a interface construída acima exibirá
-
-Tool: `transferir`
-
-```json
-{
-  "destino": "João",
-  "valor": 500
-}
-```
-
-Aprovar
-
-Editar
-
-Rejeitar
-
-3\. Callback escolhido
-
-`approve_action()` / `edit_action()` / `reject_action()`
-
-↓ `resume_agent()` → `agent.invoke(Command(...))`
-
-4\. Resultado
-
-Se houver novo interrupt, mantém o painel aberto. Caso contrário, exibe a resposta final e oculta o painel.
+O fluxo completo é: mensagem → agente → pendência → decisão → retomada → resposta ou nova pendência. A transferência deste exemplo é simulada.
 
 ## 10. Integração dos componentes
 
@@ -1183,12 +987,12 @@ A transferência é simulada. Para uma aplicação real, configure persistência
 | `checkpointer`         | `checkpointer=checkpointer`                | LangGraph                       |
 | `store`                | `store=store`                              | LangGraph/ToolRuntime           |
 | `Context`              | `context_schema=Context`                   | Validação e injeção na execução |
-| `send_message()`       | `message.submit(fn=...)`                   | Gradio                          |
-| `process_result()`     | Chamada em `send_message` e `resume_agent` | Seu código                      |
+| `enviar()`             | `mensagem.submit(fn=...)`                   | Gradio                          |
+| `processar_resultado()` | Chamada em `enviar` e `resume_agent` | Seu código                      |
 | `resume_agent()`       | Chamada pelos callbacks de decisão         | Seu código                      |
-| `approve_action()`     | `approve_btn.click(fn=...)`                | Gradio                          |
-| `edit_action()`        | `edit_btn.click(fn=...)`                   | Gradio                          |
-| `reject_action()`      | `reject_btn.click(fn=...)`                 | Gradio                          |
+| `aprovar()`            | `botao_aprovar.click(fn=...)`                | Gradio                          |
+| `editar()`             | `botao_editar.click(fn=...)`                   | Gradio                          |
+| `rejeitar()`           | `botao_rejeitar.click(fn=...)`                 | Gradio                          |
 
 ### 10.2. O ciclo completo, desde o texto até a aprovação
 
@@ -1196,13 +1000,12 @@ A transferência é simulada. Para uma aplicação real, configure persistência
 Usuário digita mensagem
     │
     ▼
-message.submit(...)
+mensagem.submit(...)
     │
     ▼
-send_message(...)
+enviar(...)
     │
     ├── prepara config com thread_id
-    ├── prepara Context
     │
     ▼
 agent.invoke(...)
@@ -1231,12 +1034,11 @@ agent.invoke(...)
     agent.invoke() retorna
               │
               ▼
-       process_result()
+       processar_resultado()
               │
               ├── extrai result.interrupts
-              ├── cria pending
-              ├── prepara argumentos JSON
-              └── gr.update(visible=True)
+              ├── guarda pendências
+              └── prepara aviso e argumentos JSON
               │
               ▼
          Gradio atualiza UI
@@ -1280,7 +1082,7 @@ agent.invoke(...)
           │         │
           └────┬────┘
                ▼
-       process_result()
+       processar_resultado()
                │
                ▼
          Gradio atualiza
@@ -1316,7 +1118,7 @@ result = agent.invoke(
 )
 ```
 
-a função `process_result()` examina novamente as interrupções retornadas. Se houver outra pendência, o painel continua visível com a próxima operação.
+a função `processar_resultado()` examina novamente as interrupções retornadas. Se houver outra pendência, os campos mostram a próxima operação.
 
 Também é possível responder a várias interrupções juntas:
 
@@ -1402,7 +1204,7 @@ agent = create_agent(
 
 No modo `per_call`, a documentação recomenda colocar HITL antes de middlewares de retry e tratamento de erros, para evitar que a aprovação seja solicitada novamente durante retries.
 
-O tratamento de erros da interface é outro assunto. Por exemplo, `edit_action()` utiliza `raise gr.Error(...)` para avisar que o JSON enviado é inválido, sem prosseguir com a operação.
+O tratamento de erros da interface é outro assunto. Por exemplo, `editar()` utiliza `raise gr.Error(...)` para avisar que o JSON enviado é inválido, sem prosseguir com a operação.
 
 ### 11.5. O papel do `respond`
 
@@ -1508,7 +1310,7 @@ O resultado exato de uma solicitação depende do modelo: ele pode optar por nã
 | Gradio             | `gr.Blocks()`                   | `.launch()`                      |
 | Evento Gradio      | `.submit()` / `.click()`        | `fn=callback`                    |
 | Atualização da UI  | `return` do callback            | Componentes em `outputs`         |
-| Painel HITL        | `gr.Group(visible=False)`       | `gr.update(visible=True)`        |
+| Revisão HITL       | `gr.Markdown()` e `gr.Textbox()` | Retornos do callback em `outputs` |
 
 ## 14. Modelo mental definitivo
 
