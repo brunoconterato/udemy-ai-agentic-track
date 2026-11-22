@@ -967,6 +967,65 @@ Solicite uma nova transferência, altere o valor no JSON e clique em **Editar e 
 
 O fluxo completo é: mensagem → agente → pendência → decisão → retomada → resposta ou nova pendência. A transferência deste exemplo é simulada.
 
+### 9.7. Mostrar os controles somente durante a interrupção
+
+Com as funções das etapas anteriores, substitua a interface por esta. O painel começa oculto e aparece quando o agente precisa de uma decisão:
+
+```python
+def atualizar_painel(historico, pendencias, aviso, argumentos):
+    if pendencias:
+        aviso = (
+            f"⏸️ **Agente pausado:** {aviso} "
+            "Revise os argumentos e escolha como continuar."
+        )
+    return historico, pendencias, aviso, argumentos, gr.update(visible=bool(pendencias))
+
+
+def enviar_ui(texto, historico, thread_id, pendencias):
+    texto, historico, pendencias, aviso, argumentos = enviar(
+        texto, historico, thread_id, pendencias
+    )
+    return texto, *atualizar_painel(historico, pendencias, aviso, argumentos)
+
+
+def aprovar_ui(historico, pendencias, thread_id):
+    return atualizar_painel(*aprovar(historico, pendencias, thread_id))
+
+
+def editar_ui(historico, pendencias, thread_id, argumentos):
+    return atualizar_painel(*editar(historico, pendencias, thread_id, argumentos))
+
+
+def rejeitar_ui(historico, pendencias, thread_id, motivo):
+    return atualizar_painel(*rejeitar(historico, pendencias, thread_id, motivo))
+
+
+with gr.Blocks() as demo:
+    thread_id = gr.State(lambda: str(uuid.uuid4()))
+    pendencias = gr.State([])
+    chat = gr.Chatbot()
+    mensagem = gr.Textbox(label="Mensagem")
+
+    with gr.Column(visible=False) as painel:
+        aviso = gr.Markdown()
+        argumentos = gr.Textbox(label="Argumentos JSON", lines=3)
+        motivo = gr.Textbox(label="Motivo da rejeição (opcional)")
+        with gr.Row():
+            botao_aprovar = gr.Button("Aprovar")
+            botao_editar = gr.Button("Editar e aprovar")
+            botao_rejeitar = gr.Button("Rejeitar")
+
+    saidas = [chat, pendencias, aviso, argumentos, painel]
+    mensagem.submit(enviar_ui, [mensagem, chat, thread_id, pendencias], [mensagem, *saidas])
+    botao_aprovar.click(aprovar_ui, [chat, pendencias, thread_id], saidas)
+    botao_editar.click(editar_ui, [chat, pendencias, thread_id, argumentos], saidas)
+    botao_rejeitar.click(rejeitar_ui, [chat, pendencias, thread_id, motivo], saidas)
+
+demo.launch()
+```
+
+Enquanto houver pendência, o painel informa que o agente está pausado e mostra a operação para revisão. Após a decisão, ele desaparece se a execução terminar ou apresenta a próxima interrupção. **Aprovar** usa os argumentos originais; para aplicar alterações no JSON, escolha **Editar e aprovar**.
+
 ## 10. Integração dos componentes
 
 Os trechos da seção 9 mostram como conectar o agente à interface.
@@ -1087,65 +1146,6 @@ agent.invoke(...)
                ▼
          Gradio atualiza
 ```
-
-### 10.3. Mostrar os controles somente durante a interrupção
-
-Após executar as definições da seção 9, substitua a interface anterior por esta. O painel começa oculto e aparece quando o agente precisa de uma decisão:
-
-```python
-def atualizar_painel(historico, pendencias, aviso, argumentos):
-    if pendencias:
-        aviso = (
-            f"⏸️ **Agente pausado:** {aviso} "
-            "Revise os argumentos e escolha como continuar."
-        )
-    return historico, pendencias, aviso, argumentos, gr.update(visible=bool(pendencias))
-
-
-def enviar_ui(texto, historico, thread_id, pendencias):
-    texto, historico, pendencias, aviso, argumentos = enviar(
-        texto, historico, thread_id, pendencias
-    )
-    return texto, *atualizar_painel(historico, pendencias, aviso, argumentos)
-
-
-def aprovar_ui(historico, pendencias, thread_id):
-    return atualizar_painel(*aprovar(historico, pendencias, thread_id))
-
-
-def editar_ui(historico, pendencias, thread_id, argumentos):
-    return atualizar_painel(*editar(historico, pendencias, thread_id, argumentos))
-
-
-def rejeitar_ui(historico, pendencias, thread_id, motivo):
-    return atualizar_painel(*rejeitar(historico, pendencias, thread_id, motivo))
-
-
-with gr.Blocks() as demo:
-    thread_id = gr.State(lambda: str(uuid.uuid4()))
-    pendencias = gr.State([])
-    chat = gr.Chatbot()
-    mensagem = gr.Textbox(label="Mensagem")
-
-    with gr.Column(visible=False) as painel:
-        aviso = gr.Markdown()
-        argumentos = gr.Textbox(label="Argumentos JSON", lines=3)
-        motivo = gr.Textbox(label="Motivo da rejeição (opcional)")
-        with gr.Row():
-            botao_aprovar = gr.Button("Aprovar")
-            botao_editar = gr.Button("Editar e aprovar")
-            botao_rejeitar = gr.Button("Rejeitar")
-
-    saidas = [chat, pendencias, aviso, argumentos, painel]
-    mensagem.submit(enviar_ui, [mensagem, chat, thread_id, pendencias], [mensagem, *saidas])
-    botao_aprovar.click(aprovar_ui, [chat, pendencias, thread_id], saidas)
-    botao_editar.click(editar_ui, [chat, pendencias, thread_id, argumentos], saidas)
-    botao_rejeitar.click(rejeitar_ui, [chat, pendencias, thread_id, motivo], saidas)
-
-demo.launch()
-```
-
-Enquanto houver pendência, o painel informa que o agente está pausado e mostra a operação para revisão. Após a decisão, ele desaparece se a execução terminar ou apresenta a próxima interrupção. **Aprovar** usa os argumentos originais; para aplicar alterações no JSON, escolha **Editar e aprovar**.
 
 ## 11. Comportamentos importantes e situações especiais
 
