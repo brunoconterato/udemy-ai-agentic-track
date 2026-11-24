@@ -181,6 +181,45 @@ AIMessage
 
 Essas mensagens também podem compor a memória de curto prazo.
 
+### 5.5. Mensagens intermediárias durante a execução
+
+`invoke()` espera a execução terminar. Com **streaming**, recebemos eventos enquanto o agente trabalha. Uma tool pode emitir mensagens próprias com `get_stream_writer()`:
+
+```python
+from langgraph.config import get_stream_writer
+
+@tool
+def organizar_tarefas(tarefas: list[str]) -> str:
+    """Organiza uma lista de tarefas, removendo espaços extras."""
+    escrever = get_stream_writer()
+    organizadas = []
+    for tarefa in tarefas:
+        escrever(f"⏳ Organizando: {tarefa}")
+        organizada = " ".join(tarefa.split())  # Exemplo de trabalho por tarefa
+        organizadas.append(organizada)
+        escrever(f"✅ Organizada: {organizada}")
+    return "\n".join(organizadas)
+
+agente_tarefas = create_agent(model=MODEL, tools=[organizar_tarefas])
+```
+
+Consuma os eventos com `stream_mode="custom"`:
+
+```python
+pedido = "Use a ferramenta para organizar as tarefas: estudar Python e revisar exercícios."
+
+for evento in agente_tarefas.stream(
+    {"messages": [{"role": "user", "content": pedido}]},
+    stream_mode="custom",
+    version="v2",
+):
+    print(evento["data"])
+```
+
+Cada chamada de `escrever` produz um evento durante a tool; o `return` continua sendo o resultado enviado ao modelo. Essas mensagens aparecem somente se o modelo chamar a tool. Neste exemplo, organizar é apenas normalizar espaços: substitua essa linha pelo trabalho real. Uma tool que usa `get_stream_writer()` precisa ser executada no contexto do agente ou grafo.
+
+O modo `custom` transmite somente os eventos personalizados; na seção 9.8, combinaremos esses eventos com a resposta do agente em uma interface.
+
 ## 6. `AgentState`, `Context`, `Checkpointer`, `Store` e `ToolRuntime`
 
 Esses conceitos devem ser separados.
@@ -1026,6 +1065,56 @@ demo.launch()
 
 Enquanto houver pendência, o painel informa que o agente está pausado e mostra a operação para revisão. Após a decisão, ele desaparece se a execução terminar ou apresenta a próxima interrupção. **Aprovar** usa os argumentos originais; para aplicar alterações no JSON, escolha **Editar e aprovar**.
 
+### 9.8. Painel de progresso em tempo real
+
+Vamos criar uma interface independente, sem HITL, usando `agente_tarefas` da seção 5.5. Ela mostra as tarefas em um painel e a resposta final separadamente. Para receber ambos, combinamos `custom` com `updates`, que traz atualizações dos nós do agente.
+
+Um callback com `yield` entrega valores várias vezes: a cada evento, o Gradio atualiza os componentes sem esperar a execução terminar.
+
+```python
+def acompanhar(pedido):
+    progresso = []
+    resposta = ""
+    yield "⏳ Aguardando o agente...", resposta
+
+    for evento in agente_tarefas.stream(
+        {"messages": [{"role": "user", "content": pedido}]},
+        stream_mode=["custom", "updates"],
+        version="v2",
+    ):
+        if evento["type"] == "custom":
+            progresso.append(evento["data"])
+            yield "\n\n".join(progresso), resposta
+        elif evento["type"] == "updates":
+            modelo = evento["data"].get("model", {})
+            for mensagem in modelo.get("messages", []):
+                if not mensagem.tool_calls and mensagem.text:
+                    resposta = mensagem.text
+
+    yield "\n\n".join(progresso) or "Nenhuma tarefa executada.", resposta
+```
+
+Conecte o callback a um botão. Cada `yield` atualiza, na ordem, o painel e a resposta:
+
+```python
+with gr.Blocks() as demo:
+    gr.Markdown("# 📋 Acompanhamento de tarefas")
+    pedido_ui = gr.Textbox(label="O que deseja organizar?", value=pedido)
+    botao = gr.Button("Iniciar", variant="primary")
+    with gr.Row():
+        with gr.Column():
+            gr.Markdown("### Progresso")
+            painel = gr.Markdown("Aguardando execução.")
+        with gr.Column():
+            gr.Markdown("### Resposta do agente")
+            resposta_ui = gr.Markdown()
+    botao.click(acompanhar, inputs=[pedido_ui], outputs=[painel, resposta_ui])
+
+demo.launch()
+```
+
+O painel acumula os eventos de início e conclusão de cada tarefa. A resposta aparece quando a execução termina; se a tool não for chamada, o painel informa que nenhuma tarefa foi executada. Para combinar este exemplo com HITL, também seria necessário tratar interrupções e retomadas como nas seções 9.3 a 9.7.
+
 ## 10. Integração dos componentes
 
 Os trechos da seção 9 mostram como conectar o agente à interface.
@@ -1386,10 +1475,12 @@ A grande distinção é que o código da aplicação controla o começo, as deci
 ### Documentação oficial consultada
 
 - [LangChain — Agents](https://docs.langchain.com/oss/python/langchain/agents)
+- [LangChain — Streaming](https://docs.langchain.com/oss/python/langchain/streaming)
 - [LangChain — Tools e ToolRuntime](https://docs.langchain.com/oss/python/langchain/tools)
 - [LangChain — Custom Middleware](https://docs.langchain.com/oss/python/langchain/middleware/custom)
 - [LangChain — Short-term Memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)
 - [LangChain — Long-term Memory](https://docs.langchain.com/oss/python/langchain/long-term-memory)
 - [LangChain — Human-in-the-Loop](https://docs.langchain.com/oss/python/langchain/human-in-the-loop)
 - [Gradio — Blocks e eventos](https://www.gradio.app/docs/gradio/blocks)
+- [Gradio — Streaming de saídas](https://www.gradio.app/guides/streaming-outputs)
 - [Gradio — Gerenciamento de estado](https://www.gradio.app/guides/state-in-blocks)
